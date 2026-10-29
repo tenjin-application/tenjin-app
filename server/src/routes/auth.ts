@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { pool } from '../db.js';
 const router = express.Router();
 
-// Hash helper functions
+// Hash helper function.
 const hash = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
 
 router.post('/request-code', async (req, res) => {
@@ -16,7 +16,7 @@ router.post('/request-code', async (req, res) => {
 
     // If our cleaned email contains the correct Ontario Tech email address.
     const ontarioTechEmailRegex = /^[a-z0-9._%+-]+@ontariotechu\.net$/;
-    if (!ontarioTechEmailRegex.test(cleanedEmail)) return res.status(400).json({ error: "Emails must end with 'ontariotechu.net'." });
+    if (!ontarioTechEmailRegex.test(cleanedEmail)) return res.status(400).json({ error: "Emails must end with '@ontariotechu.net'." });
 
     // Queries the database to see how many login attempts were made in the last 10 minutes (by a given email).
     const countResult = await pool.query(
