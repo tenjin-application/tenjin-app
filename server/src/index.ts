@@ -1,12 +1,15 @@
 import 'dotenv/config'
+import { pool } from './db.js'
 import express from 'express'
 import session from 'express-session'
 import pgSession from 'connect-pg-simple'
-import pg from 'pg'
 
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+import authRoutes from './routes/auth.js';
+
 const app = express()
 app.use(express.json())
+
+app.use('/api/auth', authRoutes);
 
 const PgStore = pgSession(session)
 app.use(session({
