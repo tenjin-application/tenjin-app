@@ -100,7 +100,7 @@ export default function LoginPage() {
                     <p>{error}</p>
                     <button type="submit" disabled={loading}>Verify Code</button>
                 </form>
-                <button onClick={() => setStep('email')}>Return to Email</button>
+                <button type="button" onClick={() => {setError(''); setCode(''); setStep('email') }}>Return to Email</button>
             </>
         )
     );
