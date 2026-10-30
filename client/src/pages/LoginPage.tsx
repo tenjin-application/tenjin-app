@@ -93,6 +93,9 @@ export default function LoginPage() {
                         placeholder="Enter 6-digit code." 
                         value={code} 
                         onChange={(e) => setCode(e.target.value)} 
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
                     />
                     <p>{error}</p>
                     <button type="submit" disabled={loading}>Verify Code</button>
