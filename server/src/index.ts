@@ -9,8 +9,6 @@ import authRoutes from './routes/auth.js';
 const app = express();
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-
 const PgStore = pgSession(session);
 app.use(session({
     store: new PgStore({ pool, createTableIfMissing: true }),
@@ -19,6 +17,8 @@ app.use(session({
     saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 },
 }));
+
+app.use('/api/auth', authRoutes);
 
 app.get('/api/health', async (_req, res) => {
     const { rows } = await pool.query('select now()')
