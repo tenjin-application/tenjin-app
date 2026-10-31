@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #0077CA;        /* buttons, links, focus rings */
-  --color-brand-dark: #003C71;   /* button hover, headings, the right-hand panel */
-  --color-accent: #E75D2A;       /* tiny highlights only: a dot, an underline, a badge */
+  --color-brand: #0077CA;        /* buttons, links, focus rings. */
+  --color-brand-dark: #003C71;   /* button hover, headings, the right-hand panel. */
+  --color-accent: #E75D2A;       /* tiny highlights only: a dot, an underline, a badge. */
 }
