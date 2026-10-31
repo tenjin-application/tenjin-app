@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { post, get } from '../lib/api'
 import { useNavigate } from 'react-router-dom';
 
+import { Input } from '../components/Input.tsx';
+import { Button } from '../components/Button.tsx';
+
 export default function LoginPage() {
     const [email, setEmail] = useState('')
     const [code, setCode] = useState('');
@@ -72,23 +75,26 @@ export default function LoginPage() {
     return (
         step === 'email' ? (
             <form onSubmit={handleEmailSubmit}>
-                <label htmlFor="email-input">Email: </label>
-                <input 
+                <Input 
+                    label="Email: "
+                    error={error}
                     id="email-input"
+
                     type="email" 
                     placeholder="example.email@ontariotechu.net"
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                 />
-                <p>{error}</p>
-                <button type="submit" disabled={loading}>Send Email</button>
+                <Button variant="primary" type="submit" disabled={loading}>Send Email</Button>
             </form>
         ) : (
             <>
                 <form onSubmit={handleCodeSubmit}>
-                    <label htmlFor="code-input">Code: </label>
-                    <input 
+                    <Input 
+                        label="Code:"
+                        error={error}
                         id="code-input"
+
                         type="text" 
                         placeholder="Enter 6-digit code." 
                         value={code} 
@@ -97,10 +103,9 @@ export default function LoginPage() {
                         autoComplete="one-time-code"
                         maxLength={6}
                     />
-                    <p>{error}</p>
-                    <button type="submit" disabled={loading}>Verify Code</button>
+                    <Button variant="primary" type="submit" disabled={loading}>Verify Code</Button>
                 </form>
-                <button type="button" onClick={() => {setError(''); setCode(''); setStep('email') }}>Return to Email</button>
+                <Button variant="secondary" type="button" onClick={() => {setError(''); setCode(''); setStep('email') }}>Return to Email</Button>
             </>
         )
     );
