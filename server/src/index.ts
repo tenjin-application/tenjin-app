@@ -5,6 +5,7 @@ import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 
 import authRoutes from './routes/auth.js';
+import groupsRoutes from './routes/groups.js';
 import courseRoutes from './routes/courses.js';
 import onboardingRoutes from './routes/onboarding.js';
 
@@ -21,6 +22,7 @@ app.use(session({
 }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/groups', groupsRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 
