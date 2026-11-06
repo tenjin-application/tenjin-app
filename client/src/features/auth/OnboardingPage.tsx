@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { get, patch } from '../lib/api';
-import { Button } from '../components/Button.tsx';
-import { BasicsStep } from '../components/onboarding/BasicsStep.tsx';
-import { CoursesStep } from '../components/onboarding/CoursesStep.tsx';
-import { AvailabilityStep } from '../components/onboarding/AvailabilityStep.tsx';
-import { PreferencesStep } from '../components/onboarding/PreferencesStep.tsx';
-import type { OnboardingData, Course } from '../components/onboarding/types.ts';
-import { ErrorMessage } from '../components/ErrorMessage.tsx';
-
-import { AuthLayout } from '../layouts/AuthLayout.tsx';
-import onboardingBackground from '../assets/onboarding_background.png';
+import { get, patch } from '@/lib/api';
+import { Button } from '@/components/ui/Button';
+import { BasicsStep } from './onboarding/BasicsStep';
+import { CoursesStep } from './onboarding/CoursesStep';
+import { AvailabilityStep } from './onboarding/AvailabilityStep';
+import { PreferencesStep } from './onboarding/PreferencesStep';
+import type { OnboardingData } from './onboarding/types';
+import type { Course } from '@shared/types';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { AuthLayout } from '@/components/layouts/AuthLayout';
+import onboardingBackground from '@/assets/onboarding_background.png';
 
 export default function OnboardingPage() {
     const [step, setStep] = useState(0);

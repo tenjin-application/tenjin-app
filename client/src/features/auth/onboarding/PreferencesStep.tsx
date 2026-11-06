@@ -1,6 +1,6 @@
-import { Checkbox } from '../Checkbox.tsx';
-import { Select } from '../Select.tsx';
-import type { StepProps } from './types.ts';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { Select } from '@/components/ui/Select';
+import type { StepProps } from './types';
 
 // Constant array for determining the number of users.
 // TODO: Convert this using Array.from for scalability.

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Input } from '../Input.tsx';
-import { Checkbox } from '../Checkbox.tsx';
-import type { StepProps, Course } from './types.ts';
+import { Input } from '@/components/ui/Input';
+import { Checkbox } from '@/components/ui/Checkbox';
+import type { StepProps } from './types';
+import type { Course } from '@shared/types';
 
 // Courses uniquely require their own state, thus we extend a type to better accommodate it.
 type CoursesStepProps = StepProps & {

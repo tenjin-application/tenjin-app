@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { ErrorMessage } from './ErrorMessage.tsx';
+import { ErrorMessage } from './ErrorMessage';
 
 type InputProps = React.ComponentProps<'input'> & { 
     label: string; 

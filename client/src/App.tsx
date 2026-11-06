@@ -1,11 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import OnboardingPage from './pages/OnboardingPage';
-import DashboardPage from './pages/DashboardPage';
-import GroupsPage from './pages/GroupsPage';
-import SettingsPage from './pages/SettingsPage';
-
-// Note: /groups may be subject to change with an optional :id parameter, we'll get there when we get there, anyways.
+import LoginPage from '@/features/auth/LoginPage';
+import OnboardingPage from '@/features/auth/OnboardingPage';
+import DashboardPage from '@/features/dashboard/DashboardPage';
+import GroupsPage from '@/features/groups/GroupsPage';
+import SettingsPage from '@/features/settings/SettingsPage';
+import { AppLayout } from '@/components/layouts/AppLayout';
 
 export default function App() {
   return (
@@ -13,11 +12,13 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/groups" element={<GroupsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }

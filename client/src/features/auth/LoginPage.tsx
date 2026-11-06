@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
-import { post, get } from '../lib/api'
 import { useNavigate } from 'react-router-dom';
 
-import { Input } from '../components/Input.tsx';
-import { Button } from '../components/Button.tsx';
-import { AuthLayout } from '../layouts/AuthLayout.tsx';
-
-import loginBackground from '../assets/login_background.png';
+import { post, get } from '@/lib/api'
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { AuthLayout } from '@/components/layouts/AuthLayout';
+import loginBackground from '@/assets/login_background.png';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')

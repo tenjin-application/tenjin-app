@@ -1,8 +1,8 @@
-import { Input } from '../Input.tsx';
-import { Select } from '../Select.tsx';
-import { Textarea } from '../Textarea.tsx';
-import { PROGRAMS } from '../../../../shared/programs.ts';
-import type { StepProps } from './types.ts';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
+import { PROGRAMS } from '@shared/programs';
+import type { StepProps } from './types';
 
 const YEARS = [1, 2, 3, 4, 5, 6];
 

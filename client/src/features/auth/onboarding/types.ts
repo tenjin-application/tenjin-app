@@ -16,10 +16,3 @@ export type StepProps = {
     data: OnboardingData;
     update: (changes: Partial<OnboardingData>) => void;
 }
-
-// Courses must be made up of an id, code, and title.
-export type Course = {
-    id: number;
-    code: string;
-    title: string;
-}

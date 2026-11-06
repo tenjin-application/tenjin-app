@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { ErrorMessage } from './ErrorMessage.tsx';
+import { ErrorMessage } from './ErrorMessage';
 
 type TextareaProps = React.ComponentProps<'textarea'> & {
     label: string;
