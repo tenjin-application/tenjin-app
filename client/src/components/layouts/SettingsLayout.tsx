@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import Footer from './Footer';
 import SettingsNavbar from './SettingsNavbar';
 import { useRequireUser } from '@/hooks/useRequireUser';
 
@@ -13,7 +12,6 @@ export function SettingsLayout() {
             <main className="flex-1">
                 <Outlet />
             </main>
-            <Footer />
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LoginPage from '@/features/auth/LoginPage';
 import OnboardingPage from '@/features/auth/OnboardingPage';
 import DashboardPage from '@/features/dashboard/DashboardPage';
@@ -20,10 +20,11 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/settings" element={<SettingsLayout />}>
-            <Route path="/accessibility" element={<AccessibilityPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/general" element={<GeneralPage />} />
+            <Route index element={<Navigate to="general" replace />} />
+            <Route path="accessibility" element={<AccessibilityPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="general" element={<GeneralPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
