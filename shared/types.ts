@@ -25,8 +25,15 @@ export type Group = {
     course_title: string | null;
     member_count: number;
     is_member: boolean;
+    is_owner: boolean;
     has_pending_request: boolean;
     score: number;
+}
+
+export type GroupMember = {
+    id: number;
+    display_name: string | null;
+    role: 'owner' | 'member';
 }
 
 // Courses must be made up of an id, code, and title.
