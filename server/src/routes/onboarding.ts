@@ -7,8 +7,11 @@ const router = express.Router();
 router.patch('/', requireAuth, async (req, res, next) => {
     // We define an array to hold invalid fields, and destructure them from the req.body.
     const invalid: string[] = [];
-    const { displayName, program, year, bio, courseIds, availability, studyStyle, groupSizeMin, groupSizeMax } = req.body;
+    const { displayName, program, year, bio, courseIds, availability, studyStyle, groupSizeMin, groupSizeMax } = req.body || {};
     const userId = req.session.userId;
+
+    // Handles any malformed requests.
+    if (!displayName || !program || !year || !courseIds || !studyStyle || !groupSizeMin || !groupSizeMax) return res.status(400).json({ error: "Malformed response" });
 
     // Valid if our display name is a string, not empty while trimmed, and it's length is less than or equal to 40 characters.
     const isValidDisplayName = typeof displayName === 'string' && displayName.trim() !== '' && displayName.length <= 40;

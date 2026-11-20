@@ -18,24 +18,24 @@ export function AvailabilityStep({ data, update }: StepProps) {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Availability</h2>
-            <p className="text-sm text-gray-500">Pick the hours you're usually free to study (optional):</p>
-            <div className="max-h-96 overflow-auto rounded-lg border border-gray-200">
+            <h2 className="text-lg font-semibold text-slate-900">Availability</h2>
+            <p className="text-sm text-slate-500">Pick the hours you're usually free to study (optional):</p>
+            <div className="max-h-96 overflow-auto rounded-lg border border-slate-200">
                 <table className="w-full min-w-96 border-separate border-spacing-0 text-sm">
                     <thead>
                         <tr>
-                            <th scope="col" className="sticky left-0 top-0 z-20 border-b border-r border-gray-200 bg-gray-50 px-2 py-2 text-left font-medium text-gray-500">Time</th>
+                            <th scope="col" className="sticky left-0 top-0 z-20 border-b border-r border-slate-200 bg-slate-50 px-2 py-2 text-left font-medium text-slate-500">Time</th>
                             {DAYS.map(day => (
-                                <th key={day} scope="col" className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-2 py-2 text-center font-medium text-gray-500">{day}</th>
+                                <th key={day} scope="col" className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 px-2 py-2 text-center font-medium text-slate-500">{day}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {HOURS.map(hour => (
                             <tr key={hour}>
-                                <td className="sticky left-0 z-10 border-b border-r border-gray-100 bg-white px-2 py-2 text-xs text-gray-500">{hour}:00</td>
+                                <td className="sticky left-0 z-10 border-b border-r border-slate-100 bg-white px-2 py-2 text-xs text-slate-500">{hour}:00</td>
                                 {DAYS.map((day, dayIndex) => (
-                                    <td key={`${day}-${hour}`} className="border-b border-gray-100 p-0 text-center">
+                                    <td key={`${day}-${hour}`} className="border-b border-slate-100 p-0 text-center">
                                         <label className="flex h-9 cursor-pointer items-center justify-center hover:bg-brand/5 has-checked:bg-brand/10">
                                             <input
                                                 type="checkbox"

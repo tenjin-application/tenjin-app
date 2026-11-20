@@ -2,15 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { get, patch } from '@/lib/api';
+
 import { Button } from '@/components/ui/Button';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { AuthLayout } from '@/components/layouts/AuthLayout';
+
 import { BasicsStep } from './onboarding/BasicsStep';
 import { CoursesStep } from './onboarding/CoursesStep';
 import { AvailabilityStep } from './onboarding/AvailabilityStep';
 import { PreferencesStep } from './onboarding/PreferencesStep';
+
 import type { OnboardingData } from './onboarding/types';
 import type { Course } from '@shared/types';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
-import { AuthLayout } from '@/components/layouts/AuthLayout';
+
 import onboardingBackground from '@/assets/onboarding_background.png';
 
 export default function OnboardingPage() {
@@ -114,37 +118,30 @@ export default function OnboardingPage() {
     // TODO: Some weird submit bug, will fix later.
     return (
         <AuthLayout>
-            <section className="relative flex flex-1 items-center justify-center px-6 py-12">
-                <img
-                    src={onboardingBackground}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-brand-dark/50" />
-
-                <form onSubmit={handleSubmit} className="relative max-w-full w-lg  bg-white p-6 rounded-2xl border-2 border-brand">
+            <section className="flex flex-1 items-center justify-center px-6 py-12 bg-slate-200">
+                <form onSubmit={handleSubmit} className="max-w-xl w-lg bg-white p-8 rounded-2xl border-2 border-slate-300 shadow-sm">
                     {step === 0 && (<BasicsStep data={data} update={update} />)}
                     {step === 1 && (<CoursesStep data={data} update={update} courses={courses} loading={coursesLoading} error={coursesError} />)}
                     {step === 2 && (<AvailabilityStep data={data} update={update} />)}
                     {step === 3 && (<PreferencesStep data={data} update={update} />)} 
 
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                            <span className="font-medium text-gray-700">
+                    <div className="space-y-2 my-2">
+                        <div className="flex items-center justify-between text-sm text-slate-500">
+                            <span className="font-medium text-brand-dark">
                                 {['Basics', 'Courses', 'Availability', 'Preferences'][step]}
                             </span>
                             <span>Step {step + 1} of 4</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-gray-200">
+
+                        <div className="h-1.5 rounded-full bg-slate-200">
                             <div
-                                className="h-1.5 rounded-full bg-brand transition-all duration-300"
+                                className="h-1.5 rounded-full bg-linear-to-r from-brand via-brand-dark to-accent transition-all duration-300"
                                 style={{ width: `${((step + 1) / 4) * 100}%` }}
                             />
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-gray-200 pt-5">
-                        
+                    <div className="flex items-center justify-between border-t border-slate-200 pt-5">
                         <Button 
                             type="button"
                             variant="secondary"

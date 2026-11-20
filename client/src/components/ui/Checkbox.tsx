@@ -7,7 +7,7 @@ type CheckboxProps = Omit<React.ComponentProps<'input'>, 'type'> & {
 export function Checkbox({ label, type="checkbox", ...rest}: CheckboxProps) {
     // NOTE: We implicitly wrap label around the checkbox because we want the label to also constitute as a clickable area.
     return (
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 text-slate-900">
             <input type={type} {...rest} />
             {label}
         </label>

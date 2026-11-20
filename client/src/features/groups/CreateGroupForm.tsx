@@ -94,9 +94,25 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
     if (loading) return <p>Loading...</p>
     
     return (
-        <form onSubmit={handleSubmit}>
-            <Input label="Name of group:" type="text" value={form.name} onChange={(e) => update({ name: e.target.value } )} />
-            <Textarea label="Group description:" value={form.description} onChange={(e) => update({ description: e.target.value })} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <Input 
+                label="Name of group:" 
+                type="text" 
+                value={form.name} 
+                onChange={(e) => update({ name: e.target.value } )} 
+                placeholder="Calculus 2 study..."
+                minLength={3}
+                maxLength={60}
+                required
+            />
+            <Textarea 
+                label="Group description (optional):" 
+                value={form.description} 
+                onChange={(e) => update({ description: e.target.value })} 
+                className="resize-none"
+                maxLength={1000}
+                placeholder="Study group for calculus 2, meetings happen every Friday between 6-9PM..."
+            />
             <Select 
                 label="Select courses (general for none):"
                 value={form.courseId ?? ''}
@@ -110,7 +126,7 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 ))}
             </Select>
             <fieldset>
-                <legend>Group Preference:*</legend>
+                <legend className="text-slate-600 text-sm">Group Preference: <span className="text-red-500">*</span></legend>
                 <Checkbox 
                     label="Open" 
                     type="radio" 
@@ -128,6 +144,7 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 label="Group capacity:"
                 value={form.capacity}
                 onChange={(e) => update({ capacity: Number(e.target.value) })}
+                required
             >
                 {CAPACITY.map((num) => (
                     <option key={`member-num-${num}`} value={num}>
@@ -136,23 +153,30 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 ))}
             </Select>
             <Input
-                label="External chat URL (optional):"
+                label="External chat URL (optional, but highly recommended):"
                 type="url"
                 value={form.chatUrl}
                 onChange={(e) => update({ chatUrl: e.target.value })}
                 error={chatUrlInvalid ? 'Enter a full link starting with https://' : ''}
+                placeholder="https://discord.com/groupthingy..."
             />
             <Select
                 label="Meeting mode:"
                 value={form.meetingMode}
                 onChange={(e) => update({ meetingMode: e.target.value as 'in_person' | 'online' | 'hybrid'})}
+                required
             >
                 <option value="hybrid">Hybrid</option>
                 <option value="in_person">In person</option>
                 <option value="online">Online</option>
             </Select>
 
-            <Button type="submit" variant="primary" disabled={submitting || !nameValid || chatUrlInvalid}>
+            <Button 
+                type="submit" 
+                variant="primary" 
+                disabled={submitting || !nameValid || chatUrlInvalid}
+                className="w-full mt-2"
+            >
                 {submitting ? 'Creating group...' : 'Create group'}
             </Button>
             {error && <ErrorMessage>{error}</ErrorMessage>}

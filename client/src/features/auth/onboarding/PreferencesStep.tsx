@@ -9,9 +9,9 @@ const GROUPSIZE = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 1
 export function PreferencesStep({ data, update }: StepProps) {
     return (
         <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Preferences</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Preferences</h2>
             <fieldset>
-                <legend>Study Preferences:*</legend>
+                <legend className="text-slate-700">Study Preferences: <span className="ml-1 text-red-600" aria-hidden="true">*</span></legend>
                 <Checkbox 
                     label="Quiet" 
                     type="radio" 
@@ -33,10 +33,11 @@ export function PreferencesStep({ data, update }: StepProps) {
             </fieldset>
 
             <fieldset>
-                <legend>Preferred Group Size:</legend>
+                <legend className="text-slate-700">Preferred Group Size:</legend>
                 <Select 
                     label="Minimum Group Size:" 
                     id="min-size-select"
+                    required
                     value={data.groupSizeMin}
                     onChange={(e) => update({ groupSizeMin: Number(e.target.value) })}
                     error={data.groupSizeMin > data.groupSizeMax ? "Your min must be less than your max." : ''}
@@ -51,6 +52,7 @@ export function PreferencesStep({ data, update }: StepProps) {
                 <Select 
                     label="Maximum Group Size:" 
                     id="max-size-select"
+                    required
                     value={data.groupSizeMax}
                     onChange={(e) => update({ groupSizeMax: Number(e.target.value) })}
                     error={data.groupSizeMax < data.groupSizeMin ? "Your max must be greater than your min." : ''}
