@@ -7,9 +7,9 @@ export function SettingsLayout() {
     if (!user) return <p>Loading...</p>;
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex h-screen overflow-hidden bg-slate-50">
             <SettingsNavbar />
-            <main className="flex-1">
+            <main className="flex-1 overflow-y-auto">
                 <Outlet />
             </main>
         </div>

@@ -8,7 +8,7 @@ export function AppLayout() {
     if (!user) return <p>Loading...</p>;
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex h-screen flex-col bg-slate-50">
             <AppNavbar />
             <main className="flex-1">
                 <Outlet />
