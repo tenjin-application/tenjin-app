@@ -32,6 +32,10 @@ app.use(session({
     }
 }));
 
+app.get('/api/health', async (_req, res) => {
+    const { rows } = await pool.query('select now()')
+    res.json({ ok: true, time: rows[0].now })
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupsRoutes);
 app.use('/api/courses', courseRoutes);
@@ -50,11 +54,6 @@ if (isProduction) {
     // Any other path is a React route like /groups: send index.html and let React Router handle it.
     app.use((req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }
-
-app.get('/api/health', async (_req, res) => {
-    const { rows } = await pool.query('select now()')
-    res.json({ ok: true, time: rows[0].now })
-});
 
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, () => console.log(`API on port ${PORT}`));
