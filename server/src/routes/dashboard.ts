@@ -1,5 +1,3 @@
-// THIS IS JUST A TEMPORARY ROUTER, SWAP ACCORDINGLY.
-
 import express from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../middleware/requireAuth.js';
