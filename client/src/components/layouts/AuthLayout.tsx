@@ -9,7 +9,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                     <Logo />
                 </div>
             </header>
-            <main className="flex flex-1">{children}</main>
+            <main className="flex flex-1 flex-col justify-center">
+                {children}
+            </main>
             <Footer />
         </div>
     );
