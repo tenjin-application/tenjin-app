@@ -69,7 +69,7 @@ export default function ProfilePage() {
         const isCheckbox = element.target instanceof HTMLInputElement && type === 'checkbox';
         setProfileSettings((prev) => ({
             ...prev,
-            [name]: isCheckbox ? (element.target as HTMLInputElement).checked : (name == 'year' ? Number(value) : value),
+            [name]: isCheckbox ? (element.target as HTMLInputElement).checked : ((name == 'year' || type == 'number') ? Number(value) : value),
         }));
     };
 
@@ -87,6 +87,7 @@ export default function ProfilePage() {
                 const result = await patch('/settings/profile', profileSettings);
                 console.log(result);
                 setSaveStatus('saved');
+                setStatusMessage('');
             } catch (err) {
                 setStatusMessage(`${err}`);
                 setSaveStatus('error');
@@ -193,6 +194,32 @@ export default function ProfilePage() {
                         />
                     </div>
                 </fieldset>
+                
+                <Input
+                    label='Minimum Group Size:'
+                    type='number'
+                    id='min-group-size-input'
+                    name='group_size_min'
+                    min={2}
+                    max={profileSettings.group_size_max - 1}
+                    step={1}
+                    maxLength={2}
+                    value={profileSettings.group_size_min}
+                    onChange={handleChange}
+                 />
+
+                <Input
+                    label='Maximum Group Size:'
+                    type='number'
+                    id='max-group-size-input'
+                    name='group_size_max'
+                    min={profileSettings.group_size_min + 1}
+                    max={40}
+                    step={1}
+                    maxLength={2}
+                    value={profileSettings.group_size_max}
+                    onChange={handleChange}
+                 />
             </div>
             {statusMessage && <p>{statusMessage}</p>}
             {saveStatus === 'saving' && 'Saving changes...'}
