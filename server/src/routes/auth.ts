@@ -8,14 +8,14 @@ const router = express.Router();
 const hash = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
 
 router.post('/request-code', async (req, res) => {
-    // Gather the email from the request body, before cleaning it.
-    const { email } = req.body;
+    const { email } = req.body ?? {};
+
+    // Clean the email before using.
     const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
     
-    // If our cleaned email isn't valid, inform the user.
+    // If the email is not clean, return an error.
     if (!cleanedEmail) return res.status(400).json({ error: "An invalid email was provided."});
-
-    // If our cleaned email doesn't contain the correct Ontario Tech email address.
+    
     const ontarioTechEmailRegex = /^[a-z0-9._%+-]+@ontariotechu\.net$/;
     if (!ontarioTechEmailRegex.test(cleanedEmail)) return res.status(400).json({ error: "Emails must end with '@ontariotechu.net'." });
 
@@ -27,7 +27,6 @@ router.post('/request-code', async (req, res) => {
     const recentCount = countResult.rows[0].count;
 
     // If the count is greater or equal to 3, return an error object informing the user (they are being rate limited).
-    // TODO: Track via., IP address, can do later.
     if (recentCount >= 3) return res.status(429).json({ error: 'Too many email codes, please try again in 10 minutes.' });
 
     // Generate our code hash.
@@ -47,12 +46,11 @@ router.post('/request-code', async (req, res) => {
 });
 
 router.post('/verify', async (req, res, next) => {
-    // TODO: parallel guessing, methinks (SECURITY).
-    
-    // Obtain the email and the code from the request body, before subsequently cleaning the email and code.
-    const { email, code } = req.body;
+    const { email, code } = req.body ?? {};
+
+    // Cleans both the email and code.
     const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
-    const cleanedCode = typeof code === 'string' ? code : "";
+    const cleanedCode = typeof code === 'string' ? code.trim() : "";
     
     // Construct a regex for the code, before testing it.
     const codeRegex = /^\d{6}$/;
@@ -60,7 +58,7 @@ router.post('/verify', async (req, res, next) => {
 
     // Obtains the most recent code that has yet to be expired, and is not used.
     const codeResult = await pool.query(
-        `SELECT id, code_hash, attempts 
+        `SELECT id, code_hash
         FROM login_codes 
         WHERE email = $1 AND expires_at > NOW() AND used_at IS NULL 
         ORDER BY created_at DESC 
@@ -69,21 +67,26 @@ router.post('/verify', async (req, res, next) => {
     );
     const recentCode = codeResult.rows[0];
     
-    // If the returned rows is empty (no valid code), or the number of attempts has exceeded the limit, return an error.
+    // If there's no recent code, it means that it has either expired, or is invalid.
     if (!recentCode) return res.status(400).json({ error: "Code expired or invalid."} );
-    if (recentCode.attempts >= 5) return res.status(429).json({ error: "Too many requests. Please request a new code." });
+    
+    // Update the attempt number from the database. If nothing is returned it means that the user already has done too many requests.
+    const attemptResult = await pool.query(
+        'UPDATE login_codes SET attempts = attempts + 1 WHERE id = $1 AND attempts < 5',
+        [recentCode.id]
+    );
+
+    if (attemptResult.rowCount === 0) {
+        return res.status(429).json({ error: "Too many attempts. Please request a new code." });
+    }
     
     // We compare the user-provided code, with the hashed code.
     const a = Buffer.from(hash(cleanedCode), 'hex');
     const b = Buffer.from(recentCode.code_hash, 'hex');
     const matches = a.length === b.length && crypto.timingSafeEqual(a, b);
 
-    // If it doesn't match, we update the number of attempts for that specific id, before returning an error.
+    // If the code doesn't match, return an error.
     if (!matches) {
-        await pool.query(
-            "UPDATE login_codes SET attempts = attempts + 1 WHERE id = $1",
-            [recentCode.id]
-        );
         return res.status(400).json({ error: "Provided code does not match." });
     }
 

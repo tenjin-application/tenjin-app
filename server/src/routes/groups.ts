@@ -11,11 +11,8 @@ const MAX_OWNED_GROUPS = 5;
 
 router.post('/', requireAuth, async (req, res, next) => {
     const invalid: string[] = [];
-    const { name, description, courseId, joinPolicy, capacity, chatUrl, meetingMode } = req.body || {};
+    const { name, description, courseId, joinPolicy, capacity, chatUrl, meetingMode } = req.body ?? {};
     const userId = req.session.userId;
-
-    // Handles any malformed requests.
-    if (!name || !joinPolicy || !capacity || !meetingMode) return res.status(400).json({ error: "Malformed response." });
 
     // Clean free-text fields first. Non-strings are left alone so validation can reject them.
     const cleanedName = typeof name === 'string' ? name.trim() : '';
@@ -81,7 +78,7 @@ router.post('/', requireAuth, async (req, res, next) => {
         await client.query('ROLLBACK');
 
         // Foreign key violation: most likely a course id that doesn't exist.
-        if (err.code === '23503') return res.status(400).json({ error: "That course doesn't exist." });
+        if (err.code === '23503') return res.status(400).json({ error: "That course does not exist." });
         return next(err);
     } finally {
         client.release();
@@ -110,7 +107,7 @@ router.get('/', requireAuth, async (req, res) => {
         [userId]
     );
 
-    // Gather the row that corresponds the user information, and subsequently courses availability.
+    // Gather the row that corresponds to the user information, and subsequently courses availability.
     const meRow = await pool.query(
         `SELECT program, year, study_style, group_size_min, group_size_max 
         FROM users
@@ -144,7 +141,7 @@ router.get('/', requireAuth, async (req, res) => {
         freeSlots: new Set(meAvailability.rows.map((row) => `${row.day}-${row.hour}`))
     };
 
-    // Query info each group and member availability, joining on user id.
+    // Query info about each group and member availability, joining on user id.
     const groupResult = await pool.query(
         `SELECT gm.group_id, gm.user_id, u.program, u.year, u.study_style
         FROM group_members gm
@@ -391,7 +388,7 @@ router.post('/:id/requests/:requestId', requireAuth, async (req, res, next) => {
 
 router.post('/:id/join', requireAuth, async (req, res, next) => {
     // We start by gathering the userId and the groupId, ensuring the the groupId is a positive integer.
-    const userId = req.session.userId;
+    const userId = req.session.userId ;
     const groupId = Number(req.params.id);
     if (!Number.isInteger(groupId) || groupId < 1) return res.status(400).json({ error: "Group id's can not be negative, or must be a number." });
 
