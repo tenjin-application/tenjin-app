@@ -9,7 +9,7 @@ const YEARS = [1, 2, 3, 4, 5, 6];
 export function BasicsStep({ data, update }: StepProps) {
     return (
         <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">Basic information</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Basic information</h2>
             <Input 
                 label="Display Name:"
                 id="display-name-input"
@@ -21,7 +21,7 @@ export function BasicsStep({ data, update }: StepProps) {
             />
 
             <Select 
-                label="Program of Study: "
+                label="Program of Study:"
                 id="program-of-study-select"
                 required
                 value={data.program}
@@ -36,7 +36,7 @@ export function BasicsStep({ data, update }: StepProps) {
             </Select>
 
             <Select
-                label="Year of Study: "
+                label="Year of Study:"
                 id="year-of-study-select"
                 required
                 value={data.year}
@@ -51,6 +51,8 @@ export function BasicsStep({ data, update }: StepProps) {
 
             <Textarea 
                 label="Bio (optional):"
+                hint={`${data.bio.length}/500`}
+                id="bio-textarea"
                 rows={4}
                 maxLength={500}
                 value={data.bio}

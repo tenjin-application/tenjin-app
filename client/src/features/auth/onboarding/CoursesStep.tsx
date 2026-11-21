@@ -16,7 +16,7 @@ export function CoursesStep({ data, update, courses, loading, error }: CoursesSt
     const [courseSearch, setCourseSearch] = useState('');
 
     // Essentially, we narrow down the course results based on the value provided by courseSearch.
-    const search = courseSearch.toLowerCase();
+    const search = courseSearch.trim().toLowerCase();
     const searchedCourses = courses.filter((course) =>
         course.code.toLowerCase().includes(search) || course.title.toLowerCase().includes(search)
     );
@@ -34,12 +34,12 @@ export function CoursesStep({ data, update, courses, loading, error }: CoursesSt
             />
             {loading ? (
                 <p>Courses Loading...</p>
-            ) : searchedCourses.length === 0 ? (
+            ) : error ? null : searchedCourses.length === 0 ? (
                 <p className="text-sm text-slate-500">No courses match "{courseSearch}".</p>
             ) : (
                 <>
-                    <p className="text-slate-900 text-medium">Results found:</p>
-                    <div className="max-h-80 overflow-y-auto rounded-lg border-2 border-brand p-2">
+                    <p className="text-slate-900 font-medium text-sm">Results found:</p>
+                    <div className="max-h-80 overflow-y-auto rounded-lg border-2 border-slate-300 p-2">
                         <ul>
                             {searchedCourses.map((course) => (
                                 <li key={course.id} className="px-2 py-2 hover:bg-slate-50">
