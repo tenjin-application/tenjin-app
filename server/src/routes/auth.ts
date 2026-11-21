@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { pool } from '../db.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { sendLoginCode } from '../mailer.js';
 const router = express.Router();
 
 // Hash helper function.
@@ -39,9 +40,12 @@ router.post('/request-code', async (req, res) => {
         [cleanedEmail, codeHash]
     );
 
-    // Log the code (for now), and return a success response.
-    // TODO: Replace with nodemailer at some point.
-    console.log(`[dev] code for ${cleanedEmail}: ${code}`);
+    // Send the email for the code if in production, otherwise send the console statement.
+    if (process.env.NODE_ENV === 'production') {
+        await sendLoginCode(cleanedEmail, code);
+    } else {
+        console.log(`[dev] code for ${cleanedEmail}: ${code}`);
+    }
     return res.json({ ok: true });
 });
 
