@@ -1,14 +1,8 @@
-import nodemailer from 'nodemailer';
+import { BrevoClient } from '@getbrevo/brevo';
 
-// Set up the nodemailer.
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: Number(process.env.SMTP_PORT) === 465,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+// Set up the brevo client.
+const brevo = new BrevoClient({
+    apiKey: process.env.BREVO_API_KEY as string
 });
 
 /**
@@ -17,10 +11,13 @@ const transporter = nodemailer.createTransport({
  * @param {string} code  - code to be forwarded to the user.
  */
 export async function sendLoginCode(email: string, code: string) {
-    await transporter.sendMail({
-        from: process.env.MAIL_FROM,
-        to: email,
+    await brevo.transactionalEmails.sendTransacEmail({
+        sender: { 
+            name: 'Tenjin', 
+            email: process.env.MAIL_FROM as string 
+        },
+        to: [{ email }],
         subject: `Your Tenjin code: ${code}`,
-        text: `Your Tenjin login code is ${code}. It expires in 10 minutes.\n\nIf you didn't ask for this, you can ignore this email.`
+        textContent: `Your Tenjin login code is ${code}. It expires in 10 minutes.\n\nIf you didn't ask for this, you can ignore this email.`
     });
 }
