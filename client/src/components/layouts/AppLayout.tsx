@@ -10,7 +10,7 @@ export function AppLayout() {
     return (
         <div className="flex min-h-screen flex-col bg-slate-50">
             <AppNavbar />
-            <main className="flex-1">
+            <main className="flex-1 px-4 sm:px-6 lg:px-8">
                 <Outlet />
             </main>
             <Footer />
