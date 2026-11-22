@@ -9,7 +9,7 @@ const links = [
 
 export default function SettingsNavbar() {
     return (
-            <header className="sticky top-0 h-screen w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white">
+            <header className="sticky top-0 w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white">
                   <div className="flex flex-col gap-4 px-6 py-4">
                     <nav className="flex flex-col gap-y-2 font-medium">
                       {links.map(({ label, to }) => (

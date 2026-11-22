@@ -5,6 +5,27 @@ import { PROGRAMS } from '../../../../shared/programs.js';
 
 const router = express.Router();
 
+router.get('/availability', requireAuth, async (req, res, next) => {
+    const userId = req.session.userId;
+    const userAvailabilityResult = await pool.query(
+        `SELECT * 
+        FROM availability WHERE user_id = $1`,
+        [userId]
+    );
+
+    console.log(userAvailabilityResult);
+    
+    if (!userAvailabilityResult) {
+        return req.session.destroy((err) => {
+            if (err) return next(err);
+            return res.status(401).json({ error: "User not found." });
+        });
+    }
+    return res.json(userAvailabilityResult.rows.map((row) => ({
+        day: row.day,
+        hour: row.hour
+    })))
+})
 
 router.patch('/', requireAuth, async (req, res, next) => {
     const allowedFields = ['display_name', 'program', 'year', 'bio', 'course_ids', 'availability', 'study_style', 'group_size_min', 'group_size_max'] as const;
@@ -13,13 +34,14 @@ router.patch('/', requireAuth, async (req, res, next) => {
     const invalid: AllowedFields[] = [];
     
     const updatedFields: string[] = [];
+    const updatedCourseIds: number[] = [];
+    const { availability } = req.body;
     const userId = req.session.userId;
 
 
 
     const fieldValidators: Record<AllowedFields, (val: any) => void> = {
         display_name: (val) => {
-            console.log("DISPLAY NAME");
             const isValidDisplayName = typeof val === 'string' && val.trim() !== '' && val.length <= 40;
             if (!isValidDisplayName) invalid.push('display_name');
             updatedFields.push(`display_name='${val.trim()}'`)
@@ -42,14 +64,17 @@ router.patch('/', requireAuth, async (req, res, next) => {
         course_ids: (val) => {
             const isValidCourseIds = Array.isArray(val) && val.length > 0 && val.every(Number.isInteger);
             if (!isValidCourseIds) invalid.push('course_ids');
+            for (const value of val) {
+                updatedCourseIds.push(value);
+            }
         },
         availability: (val) => {
             const validSlot = (slot: any) => typeof slot === 'object' && slot !== null && Number.isInteger(slot.day) && slot.day >= 0 && slot.day <= 6 && Number.isInteger(slot.hour) && slot.hour >= 8 && slot.hour <= 22;
             const isValidAvailability = Array.isArray(val) && val.every(validSlot);
             if (!isValidAvailability) invalid.push('availability');
+            
         },
         study_style: (val) => {
-            console.log('STUDY STYLE')
             const isValidStudyStyle = val === 'quiet' || val === 'discussion' || val === 'mixed';
             if (!isValidStudyStyle) invalid.push('study_style');
             updatedFields.push(`study_style='${val}'`)
@@ -66,8 +91,6 @@ router.patch('/', requireAuth, async (req, res, next) => {
         }
     }
 
-    console.log(req.body);
-
     for (const field of allowedFields) {
         const value = req.body[field];
         if (value === undefined) continue;
@@ -77,15 +100,17 @@ router.patch('/', requireAuth, async (req, res, next) => {
     // If at any point an invalid response is added to the invalid array, respond.
     if (invalid.length > 0) return res.status(400).json({ error: "Some fields are invalid.", fields: invalid });
 
-    // Basically, we map each unique slot to a map, before mapping the values into an array, then splitting them down by days and hours.
+    const unique = new Map();
+    for (const slot of availability) {
+        unique.set(`${slot.day}-${slot.hour}`, slot);
+    }
+    const slots = [...unique.values()];
+    const days = slots.map((slot) => slot.day);
+    const hours = slots.map((slot) => slot.hour);
+
+    const uniqueCourseIds = [...new Set(updatedCourseIds)];
 
     const client = await pool.connect()
-
-    console.log(`UPDATE users 
-        SET $1 
-        WHERE id=$2`,
-        [updatedFields.join(', '), userId]);
-    console.log(req.body)
 
     try {
         await client.query('BEGIN');
@@ -96,6 +121,32 @@ router.patch('/', requireAuth, async (req, res, next) => {
             WHERE id=$1`,
             [userId]
         );
+
+        if (uniqueCourseIds.length >= 1) {
+            await client.query(
+                "DELETE FROM user_courses WHERE user_id=$1",
+                [userId]
+            );
+
+            await client.query(
+                `INSERT INTO user_courses (user_id, course_id)
+                SELECT $1, UNNEST($2::INT[])`,
+                [userId, uniqueCourseIds]
+            );
+        }
+
+        if (unique.size >= 1) {
+            await client.query(
+                "DELETE FROM availability WHERE user_id=$1",
+                [userId]
+            );
+            await client.query(
+                `INSERT INTO availability (user_id, day, hour)
+                SELECT $1, UNNEST($2::INT[]), UNNEST($3::INT[])`,
+                [userId, days, hours]
+            );
+        }
+
         await client.query('COMMIT');
     } catch (err: any) {
         await client.query('ROLLBACK');

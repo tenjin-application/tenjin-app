@@ -19,14 +19,14 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/groups" element={<GroupsPage />} />
-          <Route path="/settings" element={<SettingsLayout />}>
+        </Route>
+        <Route path="/settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="general" replace />} />
             <Route path="accessibility" element={<AccessibilityPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="general" element={<GeneralPage />} />
           </Route>
-        </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

@@ -9,7 +9,8 @@ import groupsRoutes from './routes/groups.js';
 import courseRoutes from './routes/courses.js';
 import onboardingRoutes from './routes/onboarding.js';
 import dashboardRoutes from './routes/dashboard.js';
-import profileRoutes from './routes/settings/profile.js';
+import profileSettingsRoutes from './routes/settings/profile.js';
+import generalSettingsRoutes from './routes/settings/profile.js';
 
 const app = express();
 app.use(express.json());
@@ -28,7 +29,8 @@ app.use('/api/groups', groupsRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/settings/profile', profileRoutes);
+app.use('/api/settings/profile', profileSettingsRoutes);
+app.use('/api/settings/general', generalSettingsRoutes);
 
 app.get('/api/health', async (_req, res) => {
     const { rows } = await pool.query('select now()')
