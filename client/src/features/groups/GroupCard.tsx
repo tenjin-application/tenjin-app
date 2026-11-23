@@ -54,13 +54,18 @@ export function GroupCard({ group, onJoin, onRequest }: GroupCardProps) {
                 : 'Request to join';
 
     return(
-        <article className="flex h-full flex-col gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md">
+        <article className="flex h-full flex-col min-w-0 gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md">
             <div className="flex items-start justify-between gap-3">
                 <span className="text-sm font-medium text-brand">{group.course_code ?? 'General'}</span>
                 <Badge tone="accent">{MEETING_LABELS[group.meeting_mode]}</Badge>
             </div>
 
-            <h2 className="text-lg font-semibold text-slate-900">{group.name}</h2>
+            <h2 
+                className="text-lg font-semibold text-slate-900 truncate"
+                title={group.name}
+            >
+                {group.name}
+            </h2>
 
             <p className="line-clamp-3 text-sm leading-6 text-slate-600">
                 {group.description?.trim() ?? 'No description provided.'}

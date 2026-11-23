@@ -37,13 +37,22 @@ export function RequestForm({ group, onSend }: RequestFormProps) {
     
     return (
         <form onSubmit={handleSendRequest} className="space-y-4">
-            <p className="text-slate-600">The owner of <span className="text-brand font-medium">{group.name}</span> will see your message.</p>
+            <p className="text-slate-600">
+                The owner of <span 
+                    className="text-brand font-medium truncate inline-block max-w-50 align-bottom"
+                    title={group.name}
+                >
+                        {group.name}
+                    </span> 
+                will see your message.
+            </p>
             <Textarea
                 label="Message (optional):"
                 hint={`${message.length}/300`}
                 maxLength={300}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                style={{ resize: 'none' }}
                 placeholder="The moment man devoured the fruit of knowledge, he sealed his fate..."
             />
             <Button
