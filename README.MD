@@ -1,7 +1,7 @@
 # Tenjin
 Tenjin is a study based social media for students at Ontario Tech, where students can create or join various study groups based on their courses.
 
-Live demo: https://tenjin-app.onrender.com/dashboard
+Live demo: https://tenjin-app.onrender.com/
 
 ## Screenshot and Video Demo
 This is just a placeholder for now, we still need an actual screenshot and video.
