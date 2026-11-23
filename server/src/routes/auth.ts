@@ -11,23 +11,23 @@ const hash = (code: string) => crypto.createHash('sha256').update(code).digest('
 router.post('/request-code', async (req, res) => {
     const { email } = req.body ?? {};
 
-    // Clean the email before using.
+    // Clean the email to ensure that it is both trimmed, and a string, before verifying.
     const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
-    
-    // If the email is not clean, return an error.
     if (!cleanedEmail) return res.status(400).json({ error: "An invalid email was provided."});
     
+    // Assuming a valid email, we now test it up against a regex corresponding to Ontario Tech's domain.
     const ontarioTechEmailRegex = /^[a-z0-9._%+-]+@ontariotechu\.net$/;
     if (!ontarioTechEmailRegex.test(cleanedEmail)) return res.status(400).json({ error: "Emails must end with '@ontariotechu.net'." });
 
-    // Queries the database to see how many login attempts were made in the last 10 minutes (by a given email).
+    // We want to know the number of login attempts done so by a user trying to log in to some specific email.
+    // TODO: Once deployed we can use something like req.ip to rate limit by ip address.
     const countResult = await pool.query(
         "SELECT COUNT(*)::INT FROM login_codes WHERE email = $1 AND created_at >= NOW() - INTERVAL '10 minutes'",
         [cleanedEmail]
     );
     const recentCount = countResult.rows[0].count;
 
-    // If the count is greater or equal to 3, return an error object informing the user (they are being rate limited).
+    // If the user has tried to log in three times or more within the specified interval, we prevent them until that time has passed.
     if (recentCount >= 3) return res.status(429).json({ error: 'Too many email codes, please try again in 10 minutes.' });
 
     // Generate our code hash.
@@ -40,7 +40,7 @@ router.post('/request-code', async (req, res) => {
         [cleanedEmail, codeHash]
     );
 
-    // Send the email for the code if in production, otherwise send the console statement.
+    // Send the code to the specified email if in production, otherwise we use the terminal.
     if (process.env.NODE_ENV === 'production') {
         await sendLoginCode(cleanedEmail, code);
     } else {
@@ -56,7 +56,7 @@ router.post('/verify', async (req, res, next) => {
     const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
     const cleanedCode = typeof code === 'string' ? code.trim() : "";
     
-    // Construct a regex for the code, before testing it.
+    // Construct a regex for the code, ensuring it's valid.
     const codeRegex = /^\d{6}$/;
     if (!codeRegex.test(cleanedCode)) return res.status(400).json({ error: "Your code must be exactly 6 digits." });
 

@@ -5,8 +5,7 @@ import { PROGRAMS } from '../../../shared/programs.js';
 const router = express.Router();
 
 router.patch('/', requireAuth, async (req, res, next) => {
-    // We define an array to hold invalid fields, and destructure them from the req.body.
-    const invalid: string[] = [];
+    const invalid: string[] = []; // For any invalid fields.
     const { displayName, program, year, bio, courseIds, availability, studyStyle, groupSizeMin, groupSizeMax } = req.body ?? {};
     const userId = req.session.userId;
 
