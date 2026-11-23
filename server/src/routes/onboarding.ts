@@ -5,9 +5,8 @@ import { PROGRAMS } from '../../../shared/programs.js';
 const router = express.Router();
 
 router.patch('/', requireAuth, async (req, res, next) => {
-    // We define an array to hold invalid fields, and destructure them from the req.body.
-    const invalid: string[] = [];
-    const { displayName, program, year, bio, courseIds, availability, studyStyle, groupSizeMin, groupSizeMax } = req.body;
+    const invalid: string[] = []; // For any invalid fields.
+    const { displayName, program, year, bio, courseIds, availability, studyStyle, groupSizeMin, groupSizeMax } = req.body ?? {};
     const userId = req.session.userId;
 
     // Valid if our display name is a string, not empty while trimmed, and it's length is less than or equal to 40 characters.

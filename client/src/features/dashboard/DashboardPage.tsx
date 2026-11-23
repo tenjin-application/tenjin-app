@@ -1,16 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import { del, get, patch, post } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
-import type { GroupMember } from '@shared/types';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { Button } from '@/components/ui/Button';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { isSafeUrl } from '@shared/validation';
+import type { Course, GroupMember } from '@shared/types';
 
 type DashboardGroup = {
   id: number;
   name: string;
   is_owner: boolean;
+  description: string | null;
+  course_id: number | null;
+  join_policy: 'open' | 'request';
+  capacity: number;
   meeting_mode: 'in_person' | 'online' | 'hybrid';
   course_code: string | null;
   chat_url: string | null;
 };
+
+type GroupEditValues = {
+  name: string;
+  description: string;
+  courseId: number | null;
+  joinPolicy: 'open' | 'request';
+  capacity: number;
+  chatUrl: string;
+  meetingMode: DashboardGroup['meeting_mode'];
+};
+
+type UpdatedGroup = Pick<DashboardGroup,
+  'id' | 'name' | 'description' | 'course_id' | 'join_policy' | 'capacity' |
+  'meeting_mode' | 'course_code' | 'chat_url'
+>;
 
 type DashboardNotification = {
   id: number;
@@ -47,6 +73,7 @@ export default function DashboardPage() {
   const [notificationAction, setNotificationAction] = useState<string | null>(null);
   const [notificationError, setNotificationError] = useState('');
   const [managingGroup, setManagingGroup] = useState<DashboardGroup | null>(null);
+  const [editingGroup, setEditingGroup] = useState(false);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState('');
@@ -100,12 +127,13 @@ export default function DashboardPage() {
   async function handleOpenMembers(group: DashboardGroup) {
     const requestId = ++membersRequestId.current;
     setManagingGroup(group);
+    setEditingGroup(false);
     setGroupMembers([]);
     setMembersError('');
     setMemberToRemove(null);
     setMembersLoading(true);
     try {
-      const result = await get(`/groups/${group.id}/members`);
+      const result = await get(`/dashboard/groups/${group.id}/members`);
       if (membersRequestId.current === requestId) setGroupMembers(result);
     } catch (err) {
       if (membersRequestId.current === requestId) {
@@ -119,11 +147,20 @@ export default function DashboardPage() {
   function handleCloseMembers() {
     membersRequestId.current += 1;
     setManagingGroup(null);
+    setEditingGroup(false);
     setMemberToRemove(null);
   }
 
+  function handleGroupUpdated(updatedGroup: UpdatedGroup) {
+    setGroups((current) => current.map((group) => (
+      group.id === updatedGroup.id ? { ...group, ...updatedGroup } : group
+    )));
+    setManagingGroup((current) => current ? { ...current, ...updatedGroup } : current);
+    setEditingGroup(false);
+  }
+
   async function handleRemoveMember() {
-    if (!managingGroup || !memberToRemove) return;
+    if (!managingGroup?.is_owner || !memberToRemove) return;
 
     setRemovingMemberId(memberToRemove.id);
     setMembersError('');
@@ -245,7 +282,7 @@ export default function DashboardPage() {
 
                 return (
                   <li key={group.id}>
-                    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md">
+                    <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md sm:flex-row sm:items-center">
                       {chatUrl ? (
                         <a
                           href={chatUrl}
@@ -261,29 +298,27 @@ export default function DashboardPage() {
                           {content}
                         </div>
                       )}
-                      {group.is_owner && (
-                        <div className="flex shrink-0 flex-col gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => void handleOpenMembers(group)}
-                            aria-label={`Manage members of ${group.name}`}
-                            className="rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                          >
-                            Members
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setLeaveGroupError('');
-                              setGroupToLeave(group);
-                            }}
-                            aria-label={`Leave ${group.name}`}
-                            className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                          >
-                            Leave group
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex shrink-0 flex-row gap-1.5 sm:flex-col">
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenMembers(group)}
+                          aria-label={`${group.is_owner ? 'Manage' : 'View'} members of ${group.name}`}
+                          className="rounded-lg bg-brand/10 px-2.5 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                        >
+                          Members
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLeaveGroupError('');
+                            setGroupToLeave(group);
+                          }}
+                          aria-label={`Leave ${group.name}`}
+                          className="rounded-lg bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                        >
+                          Leave group
+                        </button>
+                      </div>
                     </div>
                   </li>
                 );
@@ -298,7 +333,7 @@ export default function DashboardPage() {
             <h2 id="notifications-heading" className="text-lg font-semibold text-slate-900">Notifications</h2>
             <div className="flex items-center gap-2">
               {hasNewNotifications && (
-                <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+                <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
                   {notifications.filter((notification) => notification.read_at === null).length} new
                 </span>
               )}
@@ -420,8 +455,21 @@ export default function DashboardPage() {
         <Modal
           open={managingGroup !== null}
           onClose={handleCloseMembers}
-          title={`Members of ${managingGroup?.name ?? 'group'}`}
+          title={editingGroup ? 'Edit group' : `Members of ${managingGroup?.name ?? 'group'}`}
         >
+          {editingGroup && managingGroup ? (
+            <EditGroupForm group={managingGroup} onSaved={handleGroupUpdated} />
+          ) : (
+            <>
+          {managingGroup?.is_owner && (
+            <button
+              type="button"
+              onClick={() => setEditingGroup(true)}
+              className="mb-4 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              Edit group details
+            </button>
+          )}
           {memberToRemove ? (
             <>
               <p className="text-sm text-slate-600">
@@ -460,7 +508,7 @@ export default function DashboardPage() {
                       <span className="ml-2 text-xs font-normal text-slate-500">Owner</span>
                     )}
                   </span>
-                  {member.role === 'member' && (
+                  {member.role === 'member' && managingGroup?.is_owner && (
                     <button
                       type="button"
                       onClick={() => setMemberToRemove(member)}
@@ -474,14 +522,18 @@ export default function DashboardPage() {
             </ul>
           )}
           {membersError && <p className="mt-4 text-sm text-red-700" role="alert">{membersError}</p>}
+            </>
+          )}
         </Modal>
         <Modal
           open={groupToLeave !== null}
           onClose={() => setGroupToLeave(null)}
-          title="Delete your group?"
+          title={groupToLeave?.is_owner ? 'Delete your group?' : 'Leave group?'}
         >
           <p className="text-sm leading-6 text-slate-600">
-            Leaving {groupToLeave?.name} as its owner will permanently delete the group, remove its members, and cancel pending requests. This cannot be undone.
+            {groupToLeave?.is_owner
+              ? `Leaving ${groupToLeave.name} as its owner will permanently delete the group, remove its members, and cancel pending requests. This cannot be undone.`
+              : `Are you sure you want to leave ${groupToLeave?.name}? You can request to join again later.`}
           </p>
           {leaveGroupError && <p className="mt-4 text-sm text-red-700" role="alert">{leaveGroupError}</p>}
           <div className="mt-6 flex justify-end gap-3">
@@ -499,7 +551,9 @@ export default function DashboardPage() {
               disabled={leavingGroupId !== null}
               className="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
             >
-              {leavingGroupId === groupToLeave?.id ? 'Deleting...' : 'Delete group'}
+              {leavingGroupId === groupToLeave?.id
+                ? (groupToLeave?.is_owner ? 'Deleting...' : 'Leaving...')
+                : (groupToLeave?.is_owner ? 'Delete group' : 'Leave group')}
             </button>
           </div>
         </Modal>
@@ -507,6 +561,155 @@ export default function DashboardPage() {
     </section>
   );
 }
+
+const GROUP_CAPACITY = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+function EditGroupForm({ group, onSaved }: { group: DashboardGroup; onSaved: (group: UpdatedGroup) => void }) {
+  const [form, setForm] = useState<GroupEditValues>({
+    name: group.name,
+    description: group.description ?? '',
+    courseId: group.course_id,
+    joinPolicy: group.join_policy,
+    capacity: group.capacity,
+    chatUrl: group.chat_url ?? '',
+    meetingMode: group.meeting_mode,
+  });
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const update = (changes: Partial<GroupEditValues>) => setForm((current) => ({ ...current, ...changes }));
+  const trimmedUrl = form.chatUrl.trim();
+  const chatUrlInvalid = trimmedUrl !== '' && !isSafeUrl(trimmedUrl);
+  const nameValid = form.name.trim().length >= 3 && form.name.trim().length <= 60;
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCourses() {
+      try {
+        const result = await get('/courses') as Course[];
+        if (active) setCourses(result);
+      } catch {
+        if (active) setError("Couldn't fetch courses, please try reloading.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadCourses();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleSubmit(event: React.SubmitEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const updatedGroup = await patch(`/dashboard/groups/${group.id}`, form) as UpdatedGroup;
+      onSaved(updatedGroup);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        label="Name of group:"
+        type="text"
+        value={form.name}
+        onChange={(event) => update({ name: event.target.value })}
+        placeholder="Calculus 2 study..."
+        minLength={3}
+        maxLength={60}
+        required
+      />
+      <Textarea
+        label="Group description (optional):"
+        value={form.description}
+        onChange={(event) => update({ description: event.target.value })}
+        className="resize-none"
+        maxLength={1000}
+        placeholder="Study group for calculus 2, meetings happen every Friday between 6-9PM..."
+      />
+      <Select
+        label="Select courses (general for none):"
+        value={form.courseId ?? ''}
+        onChange={(event) => update({ courseId: event.target.value === '' ? null : Number(event.target.value) })}
+      >
+        <option value="">General</option>
+        {courses.map((course) => (
+          <option key={course.id} value={course.id}>
+            {course.code}: {course.title}
+          </option>
+        ))}
+      </Select>
+      <fieldset>
+        <legend className="text-slate-600 text-sm">Group Preference: <span className="text-red-500">*</span></legend>
+        <Checkbox
+          label="Open"
+          type="radio"
+          value="open"
+          checked={form.joinPolicy === 'open'}
+          onChange={() => update({ joinPolicy: 'open' })}
+        />
+        <Checkbox
+          label="Request only"
+          type="radio"
+          value="request"
+          checked={form.joinPolicy === 'request'}
+          onChange={() => update({ joinPolicy: 'request' })}
+        />
+      </fieldset>
+      <Select
+        label="Group capacity:"
+        value={form.capacity}
+        onChange={(event) => update({ capacity: Number(event.target.value) })}
+        required
+      >
+        {GROUP_CAPACITY.map((capacity) => (
+          <option key={`member-num-${capacity}`} value={capacity}>{capacity}</option>
+        ))}
+      </Select>
+      <Input
+        label="External chat URL (optional, but highly recommended):"
+        type="url"
+        value={form.chatUrl}
+        onChange={(event) => update({ chatUrl: event.target.value })}
+        error={chatUrlInvalid ? 'Enter a full link starting with https://' : ''}
+        placeholder="https://discord.com/groupthingy..."
+      />
+      <Select
+        label="Meeting mode:"
+        value={form.meetingMode}
+        onChange={(event) => update({ meetingMode: event.target.value as GroupEditValues['meetingMode'] })}
+        required
+      >
+        <option value="hybrid">Hybrid</option>
+        <option value="in_person">In person</option>
+        <option value="online">Online</option>
+      </Select>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={submitting || !nameValid || chatUrlInvalid}
+        className="w-full mt-2"
+      >
+        {submitting ? 'Saving changes...' : 'Save changes'}
+      </Button>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </form>
+  );
+}
+
 // Gets any notification message based on the type of notification. If the actor or group name is missing, it will use a default value.
 function getNotificationMessage(notification: DashboardNotification): string {
   const actor = notification.actor_name || 'Someone';
@@ -551,7 +754,7 @@ function GroupIcon({ meetingMode }: { meetingMode: DashboardGroup['meeting_mode'
       : 'Hybrid group';
 
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent" aria-label={label} title={label}>
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand" aria-label={label} title={label}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden="true">
         {meetingMode === 'online' ? (
           <>

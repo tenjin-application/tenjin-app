@@ -11,11 +11,8 @@ const MAX_OWNED_GROUPS = 5;
 
 router.post('/', requireAuth, async (req, res, next) => {
     const invalid: string[] = [];
-    const { name, description, courseId, joinPolicy, capacity, chatUrl, meetingMode } = req.body || {};
+    const { name, description, courseId, joinPolicy, capacity, chatUrl, meetingMode } = req.body ?? {};
     const userId = req.session.userId;
-
-    // Handles any malformed requests.
-    if (!name || !joinPolicy || !capacity || !meetingMode) return res.status(400).json({ error: "Malformed response." });
 
     // Clean free-text fields first. Non-strings are left alone so validation can reject them.
     const cleanedName = typeof name === 'string' ? name.trim() : '';
@@ -81,7 +78,7 @@ router.post('/', requireAuth, async (req, res, next) => {
         await client.query('ROLLBACK');
 
         // Foreign key violation: most likely a course id that doesn't exist.
-        if (err.code === '23503') return res.status(400).json({ error: "That course doesn't exist." });
+        if (err.code === '23503') return res.status(400).json({ error: "That course does not exist." });
         return next(err);
     } finally {
         client.release();
@@ -91,47 +88,62 @@ router.post('/', requireAuth, async (req, res, next) => {
 router.get('/', requireAuth, async (req, res) => {
     // We get the userId from the session.
     const userId = req.session.userId;
+
+    // More efficient to run everything concurrently, prevents waterfalls.
+    const [groupsResult, meRow, meCourseRows, meAvailability, groupResult, groupAvailability] =
+        await Promise.all([
+            // Gathers all relevant information regarding each individual group.
+            pool.query(
+                `SELECT
+                g.id, g.name, g.description, g.course_id, g.join_policy, g.capacity, g.meeting_mode, g.created_at,
+                c.code AS course_code,
+                c.title AS course_title,
+                (SELECT COUNT(*)::INT FROM group_members gm WHERE gm.group_id = g.id) AS member_count,
+                EXISTS (SELECT 1 FROM group_members gm WHERE gm.group_id = g.id AND gm.user_id = $1) AS is_member,
+                g.owner_id = $1 AS is_owner,
+                EXISTS (SELECT 1 FROM join_requests jr WHERE jr.group_id = g.id AND jr.user_id = $1 AND jr.status = 'pending') AS has_pending_request
+                FROM groups g
+                LEFT JOIN courses c ON c.id = g.course_id
+                ORDER BY g.created_at DESC`,
+                [userId]
+            ),
+            // Gathers information about the user.
+            pool.query(
+                `SELECT program, year, study_style, group_size_min, group_size_max 
+                FROM users
+                WHERE id=$1`,
+                [userId]
+            ),
+            // Gathers information about the courses the user is taking.
+            pool.query(
+                `SELECT course_id
+                FROM user_courses
+                WHERE user_id=$1`,
+                [userId]
+            ),
+            // Gathers information about the availability of the user.
+            pool.query(
+                `SELECT day, hour
+                FROM availability
+                WHERE user_id=$1`,
+                [userId]
+            ),
+            // Gathers information about all group members, including their user information.
+            pool.query(
+                `SELECT gm.group_id, gm.user_id, u.program, u.year, u.study_style
+                FROM group_members gm
+                JOIN users u ON u.id = gm.user_id`
+            ),
+            // Gathers information about all group members and their availability.
+            pool.query(
+                `SELECT gm.group_id, gm.user_id, a.day, a.hour
+                FROM group_members gm
+                JOIN availability a ON a.user_id = gm.user_id`
+            )
+        ]);
     
-    // This one's a doozy, but put simply, it returns all relevant information about a group,
-    // Subqueries the member count, whether or not the user is a member, and whether or not the user has a pending request,
-    // While also left joining (because not all groups have to have an associated course) between groups and courses.
-    const groupsResult = await pool.query(
-        `SELECT
-        g.id, g.name, g.description, g.course_id, g.join_policy, g.capacity, g.meeting_mode, g.created_at,
-        c.code AS course_code,
-        c.title AS course_title,
-        (SELECT COUNT(*)::INT FROM group_members gm WHERE gm.group_id = g.id) AS member_count,
-        EXISTS (SELECT 1 FROM group_members gm WHERE gm.group_id = g.id AND gm.user_id = $1) AS is_member,
-        g.owner_id = $1 AS is_owner,
-        EXISTS (SELECT 1 FROM join_requests jr WHERE jr.group_id = g.id AND jr.user_id = $1 AND jr.status = 'pending') AS has_pending_request
-        FROM groups g
-        LEFT JOIN courses c ON c.id = g.course_id
-        ORDER BY g.created_at DESC`,
-        [userId]
-    );
-
-    // Gather the row that corresponds the user information, and subsequently courses availability.
-    const meRow = await pool.query(
-        `SELECT program, year, study_style, group_size_min, group_size_max 
-        FROM users
-        WHERE id=$1`,
-        [userId]
-    );
+    // Create a profile of the user.
     const profile = meRow.rows[0];
-
-    const meCourseRows = await pool.query(
-        `SELECT course_id
-        FROM user_courses
-        WHERE user_id=$1`,
-        [userId]
-    );
-
-    const meAvailability = await pool.query(
-        `SELECT day, hour
-        FROM availability
-        WHERE user_id=$1`,
-        [userId]
-    );
 
     // Construct the user object.
     const me: Me = {
@@ -144,20 +156,7 @@ router.get('/', requireAuth, async (req, res) => {
         freeSlots: new Set(meAvailability.rows.map((row) => `${row.day}-${row.hour}`))
     };
 
-    // Query info each group and member availability, joining on user id.
-    const groupResult = await pool.query(
-        `SELECT gm.group_id, gm.user_id, u.program, u.year, u.study_style
-        FROM group_members gm
-        JOIN users u ON u.id = gm.user_id`
-    );
-
-    const groupAvailability = await pool.query(
-        `SELECT gm.group_id, gm.user_id, a.day, a.hour
-        FROM group_members gm
-        JOIN availability a ON a.user_id = gm.user_id`
-    );
-
-    // Now, we essentially sort it out so that it can be parsed in a meaningful manner.
+    // Splits group members up into a map based on the group id, and includes basic information about each of the group members.
     const membersByGroup = new Map<number, { userId: number; program: string; year: number; studyStyle: string }[]>();
     for (const row of groupResult.rows) {
         if (!membersByGroup.has(row.group_id)) membersByGroup.set(row.group_id, []);
@@ -169,6 +168,7 @@ router.get('/', requireAuth, async (req, res) => {
         });
     }
 
+    // Splits group members by their group id, before further organizing them by user id and their individual availability.
     const slotsByGroup = new Map<number, Map<number, string[]>>();
     for (const row of groupAvailability.rows) {
         if (!slotsByGroup.has(row.group_id)) slotsByGroup.set(row.group_id, new Map());
@@ -390,22 +390,24 @@ router.post('/:id/requests/:requestId', requireAuth, async (req, res, next) => {
 });
 
 router.post('/:id/join', requireAuth, async (req, res, next) => {
-    // We start by gathering the userId and the groupId, ensuring the the groupId is a positive integer.
-    const userId = req.session.userId;
+    const userId = req.session.userId ;
     const groupId = Number(req.params.id);
+
+    // The group id must be a number, and must be greater or equal to one.
     if (!Number.isInteger(groupId) || groupId < 1) return res.status(400).json({ error: "Group id's can not be negative, or must be a number." });
 
+    // Destructure the message, cleaning it, before validating it.
     const { message } = req.body ?? {};
     const cleanedMessage = typeof message === 'string' ? message.trim() || null : message ?? null;
     const isValidMessage = cleanedMessage === null || (typeof cleanedMessage === 'string' && cleanedMessage.length <= 300);
     if (!isValidMessage) return res.status(400).json({ error: "Message is invalid." });
 
-    // Now we open a database transaction.
+    // Create a database transaction.
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
-        // First we gather the associated group using the groupId, ensuring it's locked before committing (FOR UPDATE).
+        // Gather the associated group, ensuring that it's locked for the subsequent queries.
         const groupRow = await client.query(
             "SELECT id, owner_id, join_policy, capacity FROM groups WHERE id = $1 FOR UPDATE",
             [groupId]
@@ -416,7 +418,7 @@ router.post('/:id/join', requireAuth, async (req, res, next) => {
             return res.status(404).json({ error: "Group not found." });
         }
 
-        // Now we check whether or not the user is already a member of the group, returning an error if so.
+        // The user should not already be a member of the group. We return an error if that is the case.
         const isMemberRow = await client.query(
             "SELECT EXISTS (SELECT 1 FROM group_members WHERE group_id=$1 AND user_id=$2) AS is_member",
             [groupId, userId]
@@ -427,7 +429,7 @@ router.post('/:id/join', requireAuth, async (req, res, next) => {
             return res.status(409).json({ error: "Already member." });
         }
 
-        // Now we check whether or not the group is already at capacity, returning an error if so.
+        // You can not join a group that has already reached max capacity. We return an error if that is the case.
         const countResult = await client.query(
             "SELECT COUNT(*)::int AS member_count FROM group_members WHERE group_id = $1",
             [groupId]
@@ -438,9 +440,9 @@ router.post('/:id/join', requireAuth, async (req, res, next) => {
             return res.status(409).json({ error: "Group already full." });
         }
         
+        // We define a status to keep track of whether or not the user will be sending a group request, and join directly.
         let status;
-        if (group.join_policy === 'open') {
-            // If the groups join policy is open, we add the user to the group, before sending a notification to the owner.
+        if (group.join_policy === 'open') { // On join only groups.
             await client.query(
                 `INSERT INTO group_members (group_id, user_id, role)
                 VALUES($1, $2, 'member')`,
@@ -452,8 +454,7 @@ router.post('/:id/join', requireAuth, async (req, res, next) => {
                 [group.owner_id, groupId, userId]
             );
             status = { status: 'joined' }
-        } else {
-            // If the groups join policy isn't open, we send a join request, before notifying the owner.
+        } else { // On request only groups.
             await client.query(
                 `INSERT INTO join_requests (group_id, user_id, message) 
                 VALUES ($1, $2, $3)`,
@@ -467,11 +468,13 @@ router.post('/:id/join', requireAuth, async (req, res, next) => {
             status = { status: 'new_request'}
         }
 
-        // Commit then return our status.
         await client.query('COMMIT');
+
         return res.json(status);
     } catch (err: any) {
         await client.query('ROLLBACK');
+
+        // Sometimes the user manages to query the join route twice, we catch this as a unique key violation.
         if (err.code === '23505') return res.status(409).json({ error: "Unique key violation (usually means you made duplicate requests)." });
         next(err);
     } finally {

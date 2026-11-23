@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import type { Group } from '@shared/types';
-import { get, post } from '@/lib/api';
-import { GroupCard } from './GroupCard';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
-import CreateGroupForm from './CreateGroupForm';
-import { RequestForm } from './RequestForm';
+
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { Checkbox } from '@/components/ui/Checkbox';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
-const GROUP_SHOW_MAX = 6;
+import { get, post } from '@/lib/api';
+
+import { GroupCard } from './GroupCard';
+import CreateGroupForm from './CreateGroupForm';
+import { RequestForm } from './RequestForm';
+
+import type { Group } from '@shared/types';
+
+const GROUP_SHOW_MAX = 6; // How many groups are shown at one time.
 
 export default function GroupsPage() {
     // State related to the primary function of the page.
@@ -28,38 +31,37 @@ export default function GroupsPage() {
     const [modeFilter, setModeFilter] = useState('');
     const [sortFilter, setSortFilter] = useState('');
     const [sortJoin, setSortJoin] = useState('');
-    const [onlyJoinable, setOnlyJoinable] = useState(false);
 
     // Cleaned text provided by the filter input, and course options narrowed down by specifically the courses that currently exist in a group.
     const search = searchText.trim().toLowerCase();
     const courseOptions = [...new Set(groups.map((g) => g.course_code).filter((code) => code !== null))];
     
     const visibleGroups = groups.filter((group) => {
-        // Basically, if search is empty, filters none, else it filters the available groups based on various search conditions including name, description, and course code.
+        // Filter on description, name, and course code.
         const matchesSearch = search === '' || group.name.toLowerCase().includes(search) || (group.description ?? '').toLowerCase().includes(search) || (group.course_code ?? '').toLowerCase().includes(search);
 
-        // Groups are filtered based on the selected course value.
+        // Filter on matched courses.
         const matchesCourse = courseFilter === '' || group.course_code === courseFilter;
 
-        // In a similar fashion, groups are filtered based on the selected value for group preference.
+        // Filter on mode filtering, such as in person, online, and hybrid.
         const matchesMode = modeFilter === '' || group.meeting_mode.includes(modeFilter);
 
-        // Filters based on groups that are currently able to be requested, or joinable.
-        const matchesOnlyJoinable = !onlyJoinable || (!(group.is_member) && !(group.has_pending_request) && (group.capacity > group.member_count));
-
-        // Filters based on join policy.
+        // Filter based on join policy.
         const sortJoinOnly = sortJoin === '' || group.join_policy.includes(sortJoin);
 
-        // Returns the union of them, essentially allowing for mixed combinations.
-        return matchesSearch && matchesCourse && matchesMode && matchesOnlyJoinable && sortJoinOnly;
+        // Returns the union of the following filters.
+        return matchesSearch && matchesCourse && matchesMode && sortJoinOnly;
     });
 
+    // Sorts on compatibility match (optionally).
     const sorted = sortFilter === 'match'
         ? [...visibleGroups].sort((a, b) => b.score - a.score)
         : visibleGroups;
     const currentGroups = sorted.slice(startIndex, startIndex + GROUP_SHOW_MAX);
 
-    // Loads groups (separated so that it can be used else where besides the initial load).
+    /**
+     * Loads groups. Separated in this instance so that it can be directly embedded.
+     */
     async function loadGroups() {
         try {
             const result = await get('/groups');
@@ -75,6 +77,11 @@ export default function GroupsPage() {
         loadGroups();
     }, []);
 
+    /**
+     * Allows the user to either request to join, or join a group directly.
+     * @param {number} groupId - The group id one is attempting to join.
+     * @param {string} message - The optional message to be sent on request.
+     */
     async function handleJoin(groupId: number, message?: string) {
         const result = await post(`/groups/${groupId}/join`, { message });
 
@@ -87,11 +94,14 @@ export default function GroupsPage() {
     }
 
     return (
-        <div className="mx-auto max-w-screen-2xl py-10 space-y-4 sm:px-10 lg:px-14">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Groups</h1>
-            <p className="text-slate-600">Explore and manage your study groups.</p>
-
-            <Button onClick={() => setShowCreate(true)}>Create group</Button>
+        <div className="mx-auto max-w-screen-2xl py-10 space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Groups</h1>
+                    <p className="text-slate-600">Explore and manage your study groups.</p>
+                </div>
+                <Button onClick={() => setShowCreate(true)}>Create group</Button>
+            </div>
 
             <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create a group">
                 <CreateGroupForm onCreated={() => {
@@ -123,89 +133,81 @@ export default function GroupsPage() {
                 <ErrorMessage>{error}</ErrorMessage>
             ) : (
                 <>
-                    <div className="flex flex-col items-center gap-3 sm:flex-row">
-                        <Input 
-                            label="Search group:"
-                            type="text"
-                            value={searchText}
-                            onChange={(e) => {
-                                setSearchText(e.target.value);
-                                setStartIndex(0);
-                            }}
-                        />
+                    <div className="rounded-2xl border-2 border-slate-200 bg-slate-100 p-4 space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                            <Input 
+                                label="Search group:"
+                                type="text"
+                                value={searchText}
+                                onChange={(e) => {
+                                    setSearchText(e.target.value);
+                                    setStartIndex(0);
+                                }}
+                            />
 
-                        <Select
-                            label="Course:"
-                            value={courseFilter}
-                            onChange={(e) => {
-                                setCourseFilter(e.target.value);
-                                setStartIndex(0);
-                            }}
-                        >
-                            <option value="">General</option> 
-                            {courseOptions.map((course) => (
-                                <option key={`filter-by-${course}`} value={course}>
-                                    {course}
-                                </option>
-                            ))}
+                            <Select
+                                label="Course:"
+                                value={courseFilter}
+                                onChange={(e) => {
+                                    setCourseFilter(e.target.value);
+                                    setStartIndex(0);
+                                }}
+                            >
+                                <option value="">General</option> 
+                                {courseOptions.map((course) => (
+                                    <option key={`filter-by-${course}`} value={course}>
+                                        {course}
+                                    </option>
+                                ))}
 
-                        </Select>
+                            </Select>
 
-                        <Select
-                            label="Meeting mode:"
-                            value={modeFilter}
-                            onChange={(e) => {
-                                setModeFilter(e.target.value);
-                                setStartIndex(0);
-                            }}
-                        >
-                            <option value="">Any</option> 
-                            <option value="in_person">In person</option> 
-                            <option value="online">Online</option> 
-                            <option value="hybrid">Hybrid</option> 
-                        </Select>
+                            <Select
+                                label="Meeting mode:"
+                                value={modeFilter}
+                                onChange={(e) => {
+                                    setModeFilter(e.target.value);
+                                    setStartIndex(0);
+                                }}
+                            >
+                                <option value="">Any</option> 
+                                <option value="in_person">In person</option> 
+                                <option value="online">Online</option> 
+                                <option value="hybrid">Hybrid</option> 
+                            </Select>
 
-                        <Select
-                            label="Sort by:"
-                            value={sortFilter}
-                            onChange={(e) => {
-                                setSortFilter(e.target.value);
-                                setStartIndex(0);
-                            }}
-                        >
-                            <option value="">Date</option>
-                            <option value="match">Match</option>
-                        </Select>
+                            <Select
+                                label="Sort by:"
+                                value={sortFilter}
+                                onChange={(e) => {
+                                    setSortFilter(e.target.value);
+                                    setStartIndex(0);
+                                }}
+                            >
+                                <option value="">Date</option>
+                                <option value="match">Match</option>
+                            </Select>
 
-                        <Select
-                            label="Join:"
-                            value={sortJoin}
-                            onChange={(e) => {
-                                setSortJoin(e.target.value);
-                                setStartIndex(0);
-                            }}
-                        >
-                            <option value="">Default</option>
-                            <option value="request">Request</option>
-                            <option value="open">Join</option>
-                        </Select>
-
-                        <Checkbox
-                            label="Only joinable"
-                            type="checkbox"
-                            checked={onlyJoinable}
-                            onChange={() => {
-                                setOnlyJoinable(!onlyJoinable);
-                                setStartIndex(0);
-                            }}
-                        />
+                            <Select
+                                label="Join:"
+                                value={sortJoin}
+                                onChange={(e) => {
+                                    setSortJoin(e.target.value);
+                                    setStartIndex(0);
+                                }}
+                            >
+                                <option value="">Default</option>
+                                <option value="request">Request</option>
+                                <option value="open">Join</option>
+                            </Select>
+                        </div>
                     </div>
 
                     {visibleGroups.length === 0 ? (
                         <p className="text-slate-600">No groups match your filters.</p>
                     ) : (
                         <>
-                            <div className="space-y-4 p-4 border-2 border-slate-300 bg-slate-100 rounded-2xl">
+                            <div className="space-y-4 p-4 border-2 border-slate-200 bg-slate-100 rounded-2xl">
                                 <div className="flex justify-between">
                                     <p className="text-sm text-slate-500">Available groups: <span className="text-brand">{sorted.length}</span></p>
                                     <p className="text-sm text-slate-500">Page {Math.ceil((startIndex / GROUP_SHOW_MAX) + 1)}/{Math.ceil(sorted.length / GROUP_SHOW_MAX)}</p>
@@ -223,14 +225,20 @@ export default function GroupsPage() {
                                 <div className="flex w-full items-center justify-between">
                                     <Button 
                                         variant="secondary"
-                                        onClick={() => setStartIndex((prev) => Math.max(0, prev - GROUP_SHOW_MAX))}
+                                        onClick={() => {
+                                            setStartIndex((prev) => Math.max(0, prev - GROUP_SHOW_MAX));
+                                            window.scrollTo({ top: 0, behavior: 'smooth'});
+                                        }}
                                         disabled={startIndex === 0}
                                         >Back</Button>
                                     
                                     <Button 
                                         variant="secondary"
-                                        onClick={() => setStartIndex((prev) => prev + GROUP_SHOW_MAX)}
-                                        disabled={startIndex + GROUP_SHOW_MAX >= visibleGroups.length}
+                                        onClick={() => {
+                                            setStartIndex((prev) => prev + GROUP_SHOW_MAX);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        disabled={startIndex + GROUP_SHOW_MAX >= sorted.length}
                                         >Forward</Button>
                                 </div>
                             </div>

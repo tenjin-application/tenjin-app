@@ -2,32 +2,32 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { pool } from '../db.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { sendLoginCode } from '../mailer.js';
 const router = express.Router();
 
 // Hash helper function.
 const hash = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
 
 router.post('/request-code', async (req, res) => {
-    // Gather the email from the request body, before cleaning it.
-    const { email } = req.body;
-    const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
-    
-    // If our cleaned email isn't valid, inform the user.
-    if (!cleanedEmail) return res.status(400).json({ error: "An invalid email was provided."});
+    const { email } = req.body ?? {};
 
-    // If our cleaned email doesn't contain the correct Ontario Tech email address.
+    // Clean the email to ensure that it is both trimmed, and a string, before verifying.
+    const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
+    if (!cleanedEmail) return res.status(400).json({ error: "An invalid email was provided."});
+    
+    // Assuming a valid email, we now test it up against a regex corresponding to Ontario Tech's domain.
     const ontarioTechEmailRegex = /^[a-z0-9._%+-]+@ontariotechu\.net$/;
     if (!ontarioTechEmailRegex.test(cleanedEmail)) return res.status(400).json({ error: "Emails must end with '@ontariotechu.net'." });
 
-    // Queries the database to see how many login attempts were made in the last 10 minutes (by a given email).
+    // We want to know the number of login attempts done so by a user trying to log in to some specific email.
+    // TODO: Once deployed we can use something like req.ip to rate limit by ip address.
     const countResult = await pool.query(
         "SELECT COUNT(*)::INT FROM login_codes WHERE email = $1 AND created_at >= NOW() - INTERVAL '10 minutes'",
         [cleanedEmail]
     );
     const recentCount = countResult.rows[0].count;
 
-    // If the count is greater or equal to 3, return an error object informing the user (they are being rate limited).
-    // TODO: Track via., IP address, can do later.
+    // If the user has tried to log in three times or more within the specified interval, we prevent them until that time has passed.
     if (recentCount >= 3) return res.status(429).json({ error: 'Too many email codes, please try again in 10 minutes.' });
 
     // Generate our code hash.
@@ -40,27 +40,29 @@ router.post('/request-code', async (req, res) => {
         [cleanedEmail, codeHash]
     );
 
-    // Log the code (for now), and return a success response.
-    // TODO: Replace with nodemailer at some point.
-    console.log(`[dev] code for ${cleanedEmail}: ${code}`);
+    // Send the code to the specified email if in production, otherwise we use the terminal.
+    if (process.env.NODE_ENV === 'production') {
+        await sendLoginCode(cleanedEmail, code);
+    } else {
+        console.log(`[dev] code for ${cleanedEmail}: ${code}`);
+    }
     return res.json({ ok: true });
 });
 
 router.post('/verify', async (req, res, next) => {
-    // TODO: parallel guessing, methinks (SECURITY).
-    
-    // Obtain the email and the code from the request body, before subsequently cleaning the email and code.
-    const { email, code } = req.body;
+    const { email, code } = req.body ?? {};
+
+    // Cleans both the email and code.
     const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : "";
-    const cleanedCode = typeof code === 'string' ? code : "";
+    const cleanedCode = typeof code === 'string' ? code.trim() : "";
     
-    // Construct a regex for the code, before testing it.
+    // Construct a regex for the code, ensuring it's valid.
     const codeRegex = /^\d{6}$/;
     if (!codeRegex.test(cleanedCode)) return res.status(400).json({ error: "Your code must be exactly 6 digits." });
 
     // Obtains the most recent code that has yet to be expired, and is not used.
     const codeResult = await pool.query(
-        `SELECT id, code_hash, attempts 
+        `SELECT id, code_hash
         FROM login_codes 
         WHERE email = $1 AND expires_at > NOW() AND used_at IS NULL 
         ORDER BY created_at DESC 
@@ -69,21 +71,26 @@ router.post('/verify', async (req, res, next) => {
     );
     const recentCode = codeResult.rows[0];
     
-    // If the returned rows is empty (no valid code), or the number of attempts has exceeded the limit, return an error.
+    // If there's no recent code, it means that it has either expired, or is invalid.
     if (!recentCode) return res.status(400).json({ error: "Code expired or invalid."} );
-    if (recentCode.attempts >= 5) return res.status(429).json({ error: "Too many requests. Please request a new code." });
+    
+    // Update the attempt number from the database. If nothing is returned it means that the user already has done too many requests.
+    const attemptResult = await pool.query(
+        'UPDATE login_codes SET attempts = attempts + 1 WHERE id = $1 AND attempts < 5',
+        [recentCode.id]
+    );
+
+    if (attemptResult.rowCount === 0) {
+        return res.status(429).json({ error: "Too many attempts. Please request a new code." });
+    }
     
     // We compare the user-provided code, with the hashed code.
     const a = Buffer.from(hash(cleanedCode), 'hex');
     const b = Buffer.from(recentCode.code_hash, 'hex');
     const matches = a.length === b.length && crypto.timingSafeEqual(a, b);
 
-    // If it doesn't match, we update the number of attempts for that specific id, before returning an error.
+    // If the code doesn't match, return an error.
     if (!matches) {
-        await pool.query(
-            "UPDATE login_codes SET attempts = attempts + 1 WHERE id = $1",
-            [recentCode.id]
-        );
         return res.status(400).json({ error: "Provided code does not match." });
     }
 

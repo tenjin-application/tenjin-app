@@ -3,13 +3,15 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
+import { CheckboxGroup } from '@/components/ui/CheckboxGroup';
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Button } from '@/components/ui/Button';
-import { get, post } from '@/lib/api';
-import { isSafeUrl } from '@shared/validation';
-
-import type { Course } from '@shared/types';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+
+import { get, post } from '@/lib/api';
+
+import { isSafeUrl } from '@shared/validation';
+import type { Course } from '@shared/types';
 
 // Define capacity for the group.
 const CAPACITY = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -89,9 +91,6 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
         }
         loadCourses();
     }, []);
-
-    // TODO: Placeholder, will replace.
-    if (loading) return <p>Loading...</p>
     
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,10 +105,10 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 required
             />
             <Textarea 
-                label="Group description (optional):" 
+                label="Group description (optional):"
+                hint={`${form.description.length}/1000`} 
                 value={form.description} 
                 onChange={(e) => update({ description: e.target.value })} 
-                className="resize-none"
                 maxLength={1000}
                 placeholder="Study group for calculus 2, meetings happen every Friday between 6-9PM..."
             />
@@ -117,29 +116,35 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 label="Select courses (general for none):"
                 value={form.courseId ?? ''}
                 onChange={(e) => update({ courseId: e.target.value === '' ? null : Number(e.target.value) })}
+                disabled={loading}
                 >
-                <option value={''}>General</option>
+                <option value={''}>{loading ? 'Loading courses...' : 'General'}</option>
                 {courses.map((course) => (
                     <option key={`${course.id}`} value={course.id}>
                         {course.code}: {course.title}
                     </option> 
                 ))}
             </Select>
-            <fieldset>
-                <legend className="text-slate-600 text-sm">Group Preference: <span className="text-red-500">*</span></legend>
+            
+            <CheckboxGroup label="Group preferences:" required>
                 <Checkbox 
                     label="Open" 
-                    type="radio" 
+                    type="radio"
+                    name="joinPolicy" 
                     value="open"
                     checked={form.joinPolicy === 'open'}
-                    onChange={() => update({ joinPolicy: 'open' })} />
+                    onChange={() => update({ joinPolicy: 'open' })} 
+                />
                 <Checkbox 
                     label="Request only" 
                     type="radio" 
+                    name="joinPolicy"
                     value="request"
                     checked={form.joinPolicy === 'request'}
-                    onChange={() => update({ joinPolicy: 'request' })} />
-            </fieldset>
+                    onChange={() => update({ joinPolicy: 'request' })} 
+                />
+            </CheckboxGroup>
+
             <Select
                 label="Group capacity:"
                 value={form.capacity}
