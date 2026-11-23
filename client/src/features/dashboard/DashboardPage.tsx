@@ -281,7 +281,7 @@ export default function DashboardPage() {
                 );
 
                 return (
-                  <li key={group.id}>
+                  <li key={group.id} className="min-w-0">
                     <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md sm:flex-row sm:items-center">
                       {chatUrl ? (
                         <a
@@ -420,7 +420,7 @@ export default function DashboardPage() {
                 <li key={request.id} className="py-4 first:pt-0 last:pb-0">
                   <p className="text-sm leading-6 text-slate-800">
                     <span className="font-semibold">{request.requester_name || 'A student'}</span>
-                    {' '}requested to join <span className="font-semibold">{request.group_name}</span>.
+                    {' '}requested to join <span className="font-semibold break-words">{request.group_name}</span>.
                   </p>
                   {request.message && <p className="mt-2 text-sm text-slate-600">{request.message}</p>}
                   <time dateTime={request.created_at} className="mt-1 block text-xs text-slate-400">
