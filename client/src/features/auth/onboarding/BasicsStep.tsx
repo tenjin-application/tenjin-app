@@ -1,7 +1,10 @@
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { PROGRAMS } from '@shared/programs';
+
+import { PROGRAMS, } from '@shared/programs';
+
+import type { Program } from '@shared/programs';
 import type { StepProps } from './types';
 
 const YEARS = [1, 2, 3, 4, 5, 6];
@@ -28,7 +31,7 @@ export function BasicsStep({ data, update }: StepProps) {
                 onChange={(e) => update({ program: e.target.value })}
             >
                 <option value="" disabled hidden>Please select a program...</option>
-                {PROGRAMS.map((program) => (
+                {PROGRAMS.map((program: Program) => (
                     <option key={program} value={program}>
                         {program}
                     </option>

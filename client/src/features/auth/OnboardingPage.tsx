@@ -36,6 +36,7 @@ export default function OnboardingPage() {
     // Helper function pertaining to incrementally modify the OnboardingData object.
     const update = (changes: Partial<OnboardingData>) => setData(prev => ({ ...prev, ...changes}));
 
+    // Headings for each step of the onboarding.
     const stepHeadings = [
         "Getting to know who you are...",
         `Hey ${data.displayName}! What courses are you currently taking?`,

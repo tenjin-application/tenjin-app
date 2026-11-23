@@ -1,6 +1,7 @@
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Select } from '@/components/ui/Select';
 import { CheckboxGroup } from '@/components/ui/CheckboxGroup';
+
 import type { StepProps } from './types';
 
 // Constant array for determining the number of users.

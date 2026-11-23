@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button';
+
 import type { StepProps } from './types';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -19,7 +20,7 @@ export function AvailabilityStep({ data, update }: StepProps) {
         });
     };
 
-    // Avoids displaying the hour in military time.
+    // Helper for displaying the hour in standard time.
     const formatHour = (hour: number) => {
         const period = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour % 12 || 12;

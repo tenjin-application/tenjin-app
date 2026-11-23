@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
-import type { Group } from '@shared/types';
-import { get, post } from '@/lib/api';
-import { GroupCard } from './GroupCard';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
-import CreateGroupForm from './CreateGroupForm';
-import { RequestForm } from './RequestForm';
+
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
-const GROUP_SHOW_MAX = 6;
+import { get, post } from '@/lib/api';
+
+import { GroupCard } from './GroupCard';
+import CreateGroupForm from './CreateGroupForm';
+import { RequestForm } from './RequestForm';
+
+import type { Group } from '@shared/types';
+
+const GROUP_SHOW_MAX = 6; // How many groups are shown at one time.
 
 export default function GroupsPage() {
     // State related to the primary function of the page.
@@ -33,28 +37,31 @@ export default function GroupsPage() {
     const courseOptions = [...new Set(groups.map((g) => g.course_code).filter((code) => code !== null))];
     
     const visibleGroups = groups.filter((group) => {
-        // Basically, if search is empty, filters none, else it filters the available groups based on various search conditions including name, description, and course code.
+        // Filter on description, name, and course code.
         const matchesSearch = search === '' || group.name.toLowerCase().includes(search) || (group.description ?? '').toLowerCase().includes(search) || (group.course_code ?? '').toLowerCase().includes(search);
 
-        // Groups are filtered based on the selected course value.
+        // Filter on matched courses.
         const matchesCourse = courseFilter === '' || group.course_code === courseFilter;
 
-        // In a similar fashion, groups are filtered based on the selected value for group preference.
+        // Filter on mode filtering, such as in person, online, and hybrid.
         const matchesMode = modeFilter === '' || group.meeting_mode.includes(modeFilter);
 
-        // Filters based on join policy.
+        // Filter based on join policy.
         const sortJoinOnly = sortJoin === '' || group.join_policy.includes(sortJoin);
 
-        // Returns the union of them, essentially allowing for mixed combinations.
+        // Returns the union of the following filters.
         return matchesSearch && matchesCourse && matchesMode && sortJoinOnly;
     });
 
+    // Sorts on compatibility match (optionally).
     const sorted = sortFilter === 'match'
         ? [...visibleGroups].sort((a, b) => b.score - a.score)
         : visibleGroups;
     const currentGroups = sorted.slice(startIndex, startIndex + GROUP_SHOW_MAX);
 
-    // Loads groups (separated so that it can be used else where besides the initial load).
+    /**
+     * Loads groups. Separated in this instance so that it can be directly embedded.
+     */
     async function loadGroups() {
         try {
             const result = await get('/groups');
@@ -70,6 +77,11 @@ export default function GroupsPage() {
         loadGroups();
     }, []);
 
+    /**
+     * Allows the user to either request to join, or join a group directly.
+     * @param {number} groupId - The group id one is attempting to join.
+     * @param {string} message - The optional message to be sent on request.
+     */
     async function handleJoin(groupId: number, message?: string) {
         const result = await post(`/groups/${groupId}/join`, { message });
 

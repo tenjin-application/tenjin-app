@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import type { Group } from '@shared/types';
+
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
+import type { Group } from '@shared/types';
+
+// A form group needs to be passed a group, and furthermore an onSend function.
 type RequestFormProps = {
     group: Group;
     onSend: (message: string) => Promise<void>;
@@ -14,7 +17,10 @@ export function RequestForm({ group, onSend }: RequestFormProps) {
     const [isSending, setIsSending] = useState(false);
     const [error, setError] = useState('');
 
-    // Handles how sending behaves, based on the passed in onSend function.
+    /**
+     * Attempts to submit the request form attempt.
+     * @param {React.SubmitEvent} e - Event that corresponds to the submission.
+     */
     async function handleSendRequest(e: React.SubmitEvent) {
         e.preventDefault()
         setError('');
