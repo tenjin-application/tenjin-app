@@ -274,7 +274,10 @@ export default function DashboardPage() {
                   <>
                     <GroupIcon meetingMode={group.meeting_mode} />
                     <div className="min-w-0">
-                      <h2 className="truncate text-lg font-semibold text-slate-900">{group.name}</h2>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <h2 className="truncate text-lg font-semibold text-slate-900">{group.name}</h2>
+                        {group.is_owner && <OwnerIcon />}
+                      </div>
                       {group.course_code && <p className="mt-1 text-sm text-slate-500">{group.course_code}</p>}
                     </div>
                   </>
@@ -282,13 +285,13 @@ export default function DashboardPage() {
 
                 return (
                   <li key={group.id} className="min-w-0">
-                    <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md sm:flex-row sm:items-center">
+                    <div className={`flex min-w-0 flex-col gap-3 rounded-xl border ${chatUrl ? 'border-brand focus-within:border-brand' : 'border-slate-200'} bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md sm:flex-row sm:items-center`}>
                       {chatUrl ? (
                         <a
                           href={chatUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`Open chat for ${group.name}`}
+                          aria-label={`Open chat for ${group.name}${group.is_owner ? ', which you own' : ''}`}
                           className="flex min-w-0 flex-1 items-center gap-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                         >
                           {content}
@@ -773,6 +776,17 @@ function GroupIcon({ meetingMode }: { meetingMode: DashboardGroup['meeting_mode'
             <path d="M3 20v-1a6 6 0 0 1 12 0v1m0-4a5 5 0 0 1 6 4" />
           </>
         )}
+      </svg>
+    </span>
+  );
+}
+
+function OwnerIcon() {
+  return (
+    <span className="shrink-0 text-accent" role="img" aria-label="You own this group" title="You own this group">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4" aria-hidden="true">
+        <path d="m2 7 4 3 6-7 6 7 4-3-2 12H4L2 7Z" />
+        <path d="M5 16h14" />
       </svg>
     </span>
   );
