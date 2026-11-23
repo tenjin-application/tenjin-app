@@ -282,7 +282,7 @@ export default function DashboardPage() {
 
                 return (
                   <li key={group.id}>
-                    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md">
+                    <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand hover:shadow-md sm:flex-row sm:items-center">
                       {chatUrl ? (
                         <a
                           href={chatUrl}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
                           {content}
                         </div>
                       )}
-                      <div className="flex shrink-0 flex-col gap-1.5">
+                      <div className="flex shrink-0 flex-row gap-1.5 sm:flex-col">
                         <button
                           type="button"
                           onClick={() => void handleOpenMembers(group)}
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                             setGroupToLeave(group);
                           }}
                           aria-label={`Leave ${group.name}`}
-                          className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          className="rounded-lg bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                         >
                           Leave group
                         </button>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
             <h2 id="notifications-heading" className="text-lg font-semibold text-slate-900">Notifications</h2>
             <div className="flex items-center gap-2">
               {hasNewNotifications && (
-                <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+                <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
                   {notifications.filter((notification) => notification.read_at === null).length} new
                 </span>
               )}
@@ -754,7 +754,7 @@ function GroupIcon({ meetingMode }: { meetingMode: DashboardGroup['meeting_mode'
       : 'Hybrid group';
 
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent" aria-label={label} title={label}>
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand" aria-label={label} title={label}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden="true">
         {meetingMode === 'online' ? (
           <>
