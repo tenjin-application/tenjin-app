@@ -1,4 +1,5 @@
 import Footer from './Footer';
+
 import { Logo } from './Logo';
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {

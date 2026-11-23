@@ -1,6 +1,8 @@
 import { useState } from 'react';
+
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
+
 import type { StepProps } from './types';
 import type { Course } from '@shared/types';
 
@@ -12,10 +14,10 @@ type CoursesStepProps = StepProps & {
 };
 
 export function CoursesStep({ data, update, courses, loading, error }: CoursesStepProps) {
-    // We want a state to track the search box.
+    // State to track user course search.
     const [courseSearch, setCourseSearch] = useState('');
 
-    // Essentially, we narrow down the course results based on the value provided by courseSearch.
+    // We can narrow down the portion the user is seeking by the course code, or by title.
     const search = courseSearch.trim().toLowerCase();
     const searchedCourses = courses.filter((course) =>
         course.code.toLowerCase().includes(search) || course.title.toLowerCase().includes(search)

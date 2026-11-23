@@ -1,11 +1,13 @@
 import { Outlet } from 'react-router-dom';
+
 import { useRequireUser } from '@/hooks/useRequireUser';
+
 import AppNavbar from './AppNavbar';
 import Footer from './Footer';
 
 export function AppLayout() {
     const user = useRequireUser();
-    if (!user) return <p>Loading...</p>;
+    if (!user) return <p>Loading...</p>; // Might be redundant, but I have this here anyways.
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-50">
