@@ -110,6 +110,7 @@ export default function CreateGroupForm({ onCreated }: CreateGroupFormProps) {
                 value={form.description} 
                 onChange={(e) => update({ description: e.target.value })} 
                 maxLength={1000}
+                style={{ resize: 'none' }}
                 placeholder="Study group for calculus 2, meetings happen every Friday between 6-9PM..."
             />
             <Select 
