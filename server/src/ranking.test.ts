@@ -25,7 +25,7 @@ function makeMe(overrides: Partial<Me> = {}): Me {
 /**
  * Creates a dummy GroupInfo object to be used for testing.
  * @param {Partial<GroupInfo>} overrides - overrides to partially update the GroupInfo instance.
- * @returns {Me} A Me instance, already initialized with default values.
+ * @returns {groupInfo} A GroupInfo instance, already initialized with default values.
  */
 function makeGroup(overrides: Partial<GroupInfo> = {}): GroupInfo {
     return {
