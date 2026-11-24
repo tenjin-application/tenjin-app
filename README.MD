@@ -8,9 +8,9 @@ Live demo: https://tenjin-app.onrender.com/
 [![Demo Youtube video](https://img.youtube.com/vi/1NsMEfQ8dY4/0.jpg)](https://www.youtube.com/watch?v=1NsMEfQ8dY4)
 
 ### Screenshots
-![Groups Page Screenshot](docs/assets/Screenshot 2026-11-23 230829.png)
+![Groups Page Screenshot](<docs/assets/Screenshot 2026-11-23 230829.png>)
 
-![Dashboard Page Screenshot](docs/assets/Screenshot 2026-11-23 230849.png)
+![Dashboard Page Screenshot](<docs/assets/Screenshot 2026-11-23 230849.png>)
 
 ## Features
 - Students can login using their Ontario Tech email, before having a code sent to them.
