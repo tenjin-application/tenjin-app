@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Copies the repo onto the GithHub machine.
+      - uses: actions/checkout@v4
+
+      # Installs node onto said machine.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Installs the server, before running tests.
+      - name: Installs server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run tests
+        working-directory: server
+        run: npm test
+
+      # Installs the client, before building.
+      - name: Installs client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build client
+        working-directory: client
+        run: npm run build
+      
