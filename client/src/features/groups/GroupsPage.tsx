@@ -94,158 +94,161 @@ export default function GroupsPage() {
     }
 
     return (
-        <div className="mx-auto max-w-screen-2xl py-10 space-y-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Groups</h1>
-                    <p className="text-slate-600">Explore and manage your study groups.</p>
-                </div>
-                <Button onClick={() => setShowCreate(true)}>Create group</Button>
-            </div>
-
-            <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create a group">
-                <CreateGroupForm onCreated={() => {
-                    setShowCreate(false);
-                    setStartIndex(0);
-                    loadGroups();
-                }}/>
-            </Modal>
-
-            <Modal
-                open={requestingGroup !== null}
-                onClose={() => setRequestingGroup(null)}
-                title={`Request to join ${requestingGroup?.name ?? ''}`}
-            >
-                {requestingGroup && (
-                    <RequestForm 
-                        group={requestingGroup}
-                        onSend={async (message) => {
-                            await handleJoin(requestingGroup.id, message);
-                            setRequestingGroup(null);
-                        }}
-                    />
-                )}
-            </Modal>
-
-            {loading ? (
-                <p className="text-slate-600">Loading groups...</p>
-            ) : error ? (
-                <ErrorMessage>{error}</ErrorMessage>
-            ) : (
-                <>
-                    <div className="rounded-2xl border-2 border-slate-200 bg-slate-100 p-4 space-y-4">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                            <Input 
-                                label="Search group:"
-                                type="text"
-                                value={searchText}
-                                onChange={(e) => {
-                                    setSearchText(e.target.value);
-                                    setStartIndex(0);
-                                }}
-                            />
-
-                            <Select
-                                label="Course:"
-                                value={courseFilter}
-                                onChange={(e) => {
-                                    setCourseFilter(e.target.value);
-                                    setStartIndex(0);
-                                }}
-                            >
-                                <option value="">General</option> 
-                                {courseOptions.map((course) => (
-                                    <option key={`filter-by-${course}`} value={course}>
-                                        {course}
-                                    </option>
-                                ))}
-
-                            </Select>
-
-                            <Select
-                                label="Meeting mode:"
-                                value={modeFilter}
-                                onChange={(e) => {
-                                    setModeFilter(e.target.value);
-                                    setStartIndex(0);
-                                }}
-                            >
-                                <option value="">Any</option> 
-                                <option value="in_person">In person</option> 
-                                <option value="online">Online</option> 
-                                <option value="hybrid">Hybrid</option> 
-                            </Select>
-
-                            <Select
-                                label="Sort by:"
-                                value={sortFilter}
-                                onChange={(e) => {
-                                    setSortFilter(e.target.value);
-                                    setStartIndex(0);
-                                }}
-                            >
-                                <option value="">Date</option>
-                                <option value="match">Match</option>
-                            </Select>
-
-                            <Select
-                                label="Join:"
-                                value={sortJoin}
-                                onChange={(e) => {
-                                    setSortJoin(e.target.value);
-                                    setStartIndex(0);
-                                }}
-                            >
-                                <option value="">Default</option>
-                                <option value="request">Request</option>
-                                <option value="open">Join</option>
-                            </Select>
-                        </div>
+        <>
+            <title>Groups | Tenjin</title>
+            <div className="mx-auto max-w-screen-2xl py-10 space-y-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Groups</h1>
+                        <p className="text-slate-600">Explore and manage your study groups.</p>
                     </div>
+                    <Button onClick={() => setShowCreate(true)}>Create group</Button>
+                </div>
 
-                    {visibleGroups.length === 0 ? (
-                        <p className="text-slate-600">No groups match your filters.</p>
-                    ) : (
-                        <>
-                            <div className="space-y-4 p-4 border-2 border-slate-200 bg-slate-100 rounded-2xl">
-                                <div className="flex justify-between">
-                                    <p className="text-sm text-slate-500">Available groups: <span className="text-brand">{sorted.length}</span></p>
-                                    <p className="text-sm text-slate-500">Page {Math.ceil((startIndex / GROUP_SHOW_MAX) + 1)}/{Math.ceil(sorted.length / GROUP_SHOW_MAX)}</p>
-                                </div>
-                                <div className="grid gap-4 max-h-full md:grid-cols-2 lg:grid-cols-3">
-                                {currentGroups.map((group) => (
-                                    <GroupCard 
-                                        key={group.id} 
-                                        group={group} 
-                                        onJoin={handleJoin} 
-                                        onRequest={setRequestingGroup}
-                                    />
-                                ))}
-                                </div>
-                                <div className="flex w-full items-center justify-between">
-                                    <Button 
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setStartIndex((prev) => Math.max(0, prev - GROUP_SHOW_MAX));
-                                            window.scrollTo({ top: 0, behavior: 'smooth'});
-                                        }}
-                                        disabled={startIndex === 0}
-                                        >Back</Button>
-                                    
-                                    <Button 
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setStartIndex((prev) => prev + GROUP_SHOW_MAX);
-                                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                                        }}
-                                        disabled={startIndex + GROUP_SHOW_MAX >= sorted.length}
-                                        >Forward</Button>
-                                </div>
-                            </div>
-                        </>
+                <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create a group">
+                    <CreateGroupForm onCreated={() => {
+                        setShowCreate(false);
+                        setStartIndex(0);
+                        loadGroups();
+                    }}/>
+                </Modal>
+
+                <Modal
+                    open={requestingGroup !== null}
+                    onClose={() => setRequestingGroup(null)}
+                    title={`Request to join ${requestingGroup?.name ?? ''}`}
+                >
+                    {requestingGroup && (
+                        <RequestForm 
+                            group={requestingGroup}
+                            onSend={async (message) => {
+                                await handleJoin(requestingGroup.id, message);
+                                setRequestingGroup(null);
+                            }}
+                        />
                     )}
-                </>
-            )}
-        </div>
+                </Modal>
+
+                {loading ? (
+                    <p className="text-slate-600">Loading groups...</p>
+                ) : error ? (
+                    <ErrorMessage>{error}</ErrorMessage>
+                ) : (
+                    <>
+                        <div className="rounded-2xl border-2 border-slate-200 bg-slate-100 p-4 space-y-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                                <Input 
+                                    label="Search group:"
+                                    type="text"
+                                    value={searchText}
+                                    onChange={(e) => {
+                                        setSearchText(e.target.value);
+                                        setStartIndex(0);
+                                    }}
+                                />
+
+                                <Select
+                                    label="Course:"
+                                    value={courseFilter}
+                                    onChange={(e) => {
+                                        setCourseFilter(e.target.value);
+                                        setStartIndex(0);
+                                    }}
+                                >
+                                    <option value="">General</option> 
+                                    {courseOptions.map((course) => (
+                                        <option key={`filter-by-${course}`} value={course}>
+                                            {course}
+                                        </option>
+                                    ))}
+
+                                </Select>
+
+                                <Select
+                                    label="Meeting mode:"
+                                    value={modeFilter}
+                                    onChange={(e) => {
+                                        setModeFilter(e.target.value);
+                                        setStartIndex(0);
+                                    }}
+                                >
+                                    <option value="">Any</option> 
+                                    <option value="in_person">In person</option> 
+                                    <option value="online">Online</option> 
+                                    <option value="hybrid">Hybrid</option> 
+                                </Select>
+
+                                <Select
+                                    label="Sort by:"
+                                    value={sortFilter}
+                                    onChange={(e) => {
+                                        setSortFilter(e.target.value);
+                                        setStartIndex(0);
+                                    }}
+                                >
+                                    <option value="">Date</option>
+                                    <option value="match">Match</option>
+                                </Select>
+
+                                <Select
+                                    label="Join:"
+                                    value={sortJoin}
+                                    onChange={(e) => {
+                                        setSortJoin(e.target.value);
+                                        setStartIndex(0);
+                                    }}
+                                >
+                                    <option value="">Default</option>
+                                    <option value="request">Request</option>
+                                    <option value="open">Join</option>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {visibleGroups.length === 0 ? (
+                            <p className="text-slate-600">No groups match your filters.</p>
+                        ) : (
+                            <>
+                                <div className="space-y-4 p-4 border-2 border-slate-200 bg-slate-100 rounded-2xl">
+                                    <div className="flex justify-between">
+                                        <p className="text-sm text-slate-500">Available groups: <span className="text-brand">{sorted.length}</span></p>
+                                        <p className="text-sm text-slate-500">Page {Math.ceil((startIndex / GROUP_SHOW_MAX) + 1)}/{Math.ceil(sorted.length / GROUP_SHOW_MAX)}</p>
+                                    </div>
+                                    <div className="grid gap-4 max-h-full md:grid-cols-2 lg:grid-cols-3">
+                                    {currentGroups.map((group) => (
+                                        <GroupCard 
+                                            key={group.id} 
+                                            group={group} 
+                                            onJoin={handleJoin} 
+                                            onRequest={setRequestingGroup}
+                                        />
+                                    ))}
+                                    </div>
+                                    <div className="flex w-full items-center justify-between">
+                                        <Button 
+                                            variant="secondary"
+                                            onClick={() => {
+                                                setStartIndex((prev) => Math.max(0, prev - GROUP_SHOW_MAX));
+                                                window.scrollTo({ top: 0, behavior: 'smooth'});
+                                            }}
+                                            disabled={startIndex === 0}
+                                            >Back</Button>
+                                        
+                                        <Button 
+                                            variant="secondary"
+                                            onClick={() => {
+                                                setStartIndex((prev) => prev + GROUP_SHOW_MAX);
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }}
+                                            disabled={startIndex + GROUP_SHOW_MAX >= sorted.length}
+                                            >Forward</Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
+        </>
     );
 }

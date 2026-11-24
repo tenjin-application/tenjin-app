@@ -84,6 +84,7 @@ export default function LoginPage() {
     
     return (
         <AuthLayout>
+            <title>Login | Tenjin</title>
             <section className="relative flex w-full min-h-dvh bg-brand-dark text-white">
                 <img
                     src={login}

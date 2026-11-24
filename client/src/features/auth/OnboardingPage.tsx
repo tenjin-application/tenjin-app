@@ -123,6 +123,7 @@ export default function OnboardingPage() {
 
     return (
         <AuthLayout>
+            <title>Onboarding | Tenjin</title>
             <section className="flex flex-col items-center justify-center gap-4 p-4">
                 <h1 className="text-2xl text-center tracking-tight text-slate-900 font-bold">{submitting ? "Hang on tight!" : stepHeadings[step]}</h1>
 
