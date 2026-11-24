@@ -8,7 +8,7 @@ const router = express.Router();
 // Hash helper function.
 const hash = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
 
-router.post('/request-code', async (req, res) => {
+router.post('/request-code', async (req: express.Request, res: express.Response) => {
     const { email } = req.body ?? {};
 
     // Clean the email to ensure that it is both trimmed, and a string, before verifying.
@@ -49,7 +49,7 @@ router.post('/request-code', async (req, res) => {
     return res.json({ ok: true });
 });
 
-router.post('/verify', async (req, res, next) => {
+router.post('/verify', async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { email, code } = req.body ?? {};
 
     // Cleans both the email and code.
@@ -121,7 +121,7 @@ router.post('/verify', async (req, res, next) => {
     });
 });
 
-router.get('/me', requireAuth, async (req, res, next) => {
+router.get('/me', requireAuth, async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Obtain the user id corresponding to the session, before looking it up in our users database.
     const userId = req.session.userId;
     const userResult = await pool.query(
@@ -144,7 +144,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
     return res.json({ user: userRow })
 });
 
-router.post('/logout', (req, res, next) => {
+router.post('/logout', (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Destroys the session, clears the sid, and returns ok.
     req.session.destroy((err) => {
         if (err) return next(err);

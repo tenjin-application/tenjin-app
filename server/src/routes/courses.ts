@@ -5,7 +5,7 @@ import type { Course } from '../../../shared/types.js';
 
 const router = express.Router();
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req: express.Request, res: express.Response) => {
     // Query and store all of the courses, before returning (God why can't all routes be this easy?).
     const coursesResult = await pool.query<Course>(
         'SELECT id::INT AS id, code, title FROM courses ORDER BY code'

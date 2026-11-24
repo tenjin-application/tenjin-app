@@ -9,7 +9,7 @@ import { scoreGroup } from '../ranking.js';
 const router = express.Router();
 const MAX_OWNED_GROUPS = 5;
 
-router.post('/', requireAuth, async (req, res, next) => {
+router.post('/', requireAuth, async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const invalid: string[] = [];
     const { name, description, courseId, joinPolicy, capacity, chatUrl, meetingMode } = req.body ?? {};
     const userId = req.session.userId;
@@ -85,7 +85,7 @@ router.post('/', requireAuth, async (req, res, next) => {
     }
 });
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req: express.Request, res: express.Response) => {
     // We get the userId from the session.
     const userId = req.session.userId;
 
@@ -389,7 +389,7 @@ router.post('/:id/requests/:requestId', requireAuth, async (req, res, next) => {
     }
 });
 
-router.post('/:id/join', requireAuth, async (req, res, next) => {
+router.post('/:id/join', requireAuth, async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const userId = req.session.userId ;
     const groupId = Number(req.params.id);
 
