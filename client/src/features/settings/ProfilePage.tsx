@@ -150,7 +150,7 @@ export default function ProfilePage() {
                 const result = await del("/settings/profile/delete_user");
                 if (result.deleted == true) {
                     setDeleted(true);
-                    const wait = setTimeout(async () => {
+                    setTimeout(async () => {
                         navigate('/login');
                     }, 2000);
                 }
@@ -180,7 +180,7 @@ export default function ProfilePage() {
 
         const timerId = setTimeout(async () => {
             try {
-                const result = await patch('/settings/profile', profileSettings);
+                await patch('/settings/profile', profileSettings);
                 setSaveStatus('saved');
                 setStatusMessage('');
             } catch (err) {
