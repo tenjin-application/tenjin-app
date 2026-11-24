@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { del, get, patch, post } from '@/lib/api';
-import { Badge } from '@/components/ui/Badge';
+import { del, get, patch } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { PROGRAMS } from '@shared/programs';
@@ -17,6 +15,7 @@ type Years = (typeof YEARS)[number];
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
 
+// Profile Settings interface, stores local user data for display and modification
 interface ProfileSettings {
     display_name: string;
     email: string;
@@ -64,6 +63,7 @@ export default function ProfilePage() {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const navigate = useNavigate();
 
+    // Loads current course list upon visiting the settings page
     useEffect(() => {
         async function loadCourses() {
             try {
