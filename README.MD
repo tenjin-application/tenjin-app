@@ -4,6 +4,8 @@ Tenjin is a study based social media for students at Ontario Tech, where student
 Live demo: https://tenjin-app.onrender.com/
 
 ## Screenshot and Video Demo
+[![Demo Youtube video](https://img.youtube.com/vi/1NsMEfQ8dY4/0.jpg)](https://www.youtube.com/watch?v=1NsMEfQ8dY4)
+
 This is just a placeholder for now, we still need an actual screenshot and video.
 
 ## Features
