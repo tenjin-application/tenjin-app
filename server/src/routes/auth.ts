@@ -130,7 +130,7 @@ router.get('/me', requireAuth, async (req: express.Request, res: express.Respons
         [userId]
     );
     const userRow = userResult.rows[0];
-
+    // console.log(userRow);
     // If there's no user, destroy the session and return a 401.
     // Note: We could technically also clear out the sid, but it's not really needed here anyways.
     if (!userRow) {
@@ -139,7 +139,6 @@ router.get('/me', requireAuth, async (req: express.Request, res: express.Respons
             return res.status(401).json({ error: "User not found." });
         });
     }
-
     // Otherwise, return the user info to the client.
     return res.json({ user: userRow })
 });

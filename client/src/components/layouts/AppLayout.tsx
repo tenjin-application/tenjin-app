@@ -10,7 +10,7 @@ export function AppLayout() {
     if (!user) return <p>Loading...</p>; // Might be redundant, but I have this here anyways.
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex h-screen flex-col bg-slate-50">
             <AppNavbar />
             <main className="flex-1 px-4 sm:px-6 lg:px-8">
                 <Outlet />
