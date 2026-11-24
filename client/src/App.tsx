@@ -21,7 +21,7 @@ export default function App() {
           <Route path="/groups" element={<GroupsPage />} />
         </Route>
         <Route path="/settings" element={<SettingsLayout />}>
-            <Route index element={<Navigate to="general" replace />} />
+            <Route index element={<Navigate to="profile" replace />} />
             <Route path="accessibility" element={<AccessibilityPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<ProfilePage />} />

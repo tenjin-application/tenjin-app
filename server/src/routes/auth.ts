@@ -130,7 +130,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
         [userId]
     );
     const userRow = userResult.rows[0];
-    console.log(userRow);
+    // console.log(userRow);
     // If there's no user, destroy the session and return a 401.
     // Note: We could technically also clear out the sid, but it's not really needed here anyways.
     if (!userRow) {

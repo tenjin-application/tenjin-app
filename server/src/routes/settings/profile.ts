@@ -13,7 +13,7 @@ router.get('/availability', requireAuth, async (req, res, next) => {
         [userId]
     );
 
-    console.log(userAvailabilityResult);
+    // console.log(userAvailabilityResult);
     
     if (!userAvailabilityResult) {
         return req.session.destroy((err) => {
@@ -25,6 +25,41 @@ router.get('/availability', requireAuth, async (req, res, next) => {
         day: row.day,
         hour: row.hour
     })))
+})
+
+router.get('/course_ids', requireAuth, async (req, res, next) => {
+    const userId = req.session.userId;
+    const userCourseIdResult = await pool.query(
+        `SELECT * FROM user_courses WHERE user_id = $1`,
+        [userId]
+    );
+    console.log(userCourseIdResult);
+    if (!userCourseIdResult) {
+        return req.session.destroy((err) => {
+            if (err) return next(err);
+            return res.status(401).json({ error: "User not found." });
+        });
+    }
+    return res.json(userCourseIdResult.rows.map((row) => ({
+        course_id: row.course_id
+    })));
+})
+
+router.delete('/delete_user', requireAuth, async (req, res, next) => {
+    const userId = req.session.userId;
+    console.log("DELETE REQUESTED");
+    const deleteUserResult = await pool.query(
+        'DELETE FROM users WHERE id = $1',
+        [userId]
+    );
+    if (!deleteUserResult) {
+        return req.session.destroy((err) => {
+            if (err) return next(err);
+            return res.status(401).json({ error: "User not found." });
+        });
+    }
+    console.log(`RESULT: ${deleteUserResult}`);
+    return res.json({ deleted: true });
 })
 
 router.patch('/', requireAuth, async (req, res, next) => {

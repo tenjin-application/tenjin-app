@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { PROGRAMS } from '@shared/programs';
 import { useRequireUser } from '@/hooks/useRequireUser';
 import type { Course } from '@shared/types';
+import { useNavigate } from 'react-router-dom';
 
 const YEARS = [1, 2, 3, 4, 5, 6] as const;
 type Years = (typeof YEARS)[number];
@@ -57,6 +58,11 @@ export default function ProfilePage() {
     const searchedCourses = courses.filter((course) =>
         course.code.toLowerCase().includes(search) || course.title.toLowerCase().includes(search)
     );
+    const [deleting, setDeleting] = useState(false);
+    const [deleteConfim, setDeleteConfirm] = useState(false);
+    const [accountDeleted, setDeleted] = useState(false);
+    const dialogRef = useRef<HTMLDialogElement>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function loadCourses() {
@@ -88,6 +94,15 @@ export default function ProfilePage() {
                 }
 
                 result.user.availability = newAvail;
+
+                const courseIdsResult = await get('/settings/profile/course_ids');
+                const newCourseIds: number[] = [];
+                for (const id of courseIdsResult) {
+                    newCourseIds.push(id.course_id);
+                }
+                
+                result.user.course_ids = newCourseIds;
+
                 if (enabled) {
                     setProfileSettings(result.user);
                 }
@@ -124,8 +139,37 @@ export default function ProfilePage() {
         });
     };
 
+    const handleDelete = () => {
+        if (deleteConfim == false) {
+            setDeleteConfirm(true);
+            return;
+        }
+        setDeleting(true);
+        async function deleteAccount() {
+            try {
+                const result = await del("/settings/profile/delete_user");
+                if (result.deleted == true) {
+                    setDeleted(true);
+                    const wait = setTimeout(async () => {
+                        navigate('/login');
+                    }, 2000);
+                }
+            } catch (err) {
+                setStatusMessage(`${err}`)
+            } finally {
+                setDeleting(false);
+                setDeleteConfirm(false);
+            }
+        }
+        deleteAccount();
+        return;
+    }
+
     useEffect(() => {
-        console.log(profileSettings);
+        dialogRef.current?.showModal();
+    }, [accountDeleted]);
+
+    useEffect(() => {
         if (isLoading) return;
         if (isInitialLoad.current) {
             isInitialLoad.current = false;
@@ -137,14 +181,13 @@ export default function ProfilePage() {
         const timerId = setTimeout(async () => {
             try {
                 const result = await patch('/settings/profile', profileSettings);
-                console.log(result);
                 setSaveStatus('saved');
                 setStatusMessage('');
             } catch (err) {
                 setStatusMessage(`${err}`);
                 setSaveStatus('error');
             }
-        }, 1700);
+        }, 1500);
         
         return () => clearTimeout(timerId);
     }, [profileSettings, user, isLoading])
@@ -152,12 +195,25 @@ export default function ProfilePage() {
     if (isLoading) return <section className="relative flex-1 overflow-y-auto px-6 py-3 space-y-4"><p>Loading settings...</p></section>;
 
     return (
-        <section className="relative flex-1 overflow-y-auto px-6 py-3 space-y-4">
-
+        <section className="relative flex-1 overflow-y-auto px-6 py-3 space-y-4 ">
+            <dialog 
+                onClose = {() => {navigate('/login')}}
+                onClick={(e) => {
+                    if (e.target === dialogRef.current) navigate('/login');
+                }}
+            >
+                Account Deleted. You will be redirected to the login page.
+            </dialog>
             <div>
                 <h1 className='text-3xl font-bold tracking-tight text-slate-900'>Profile Settings</h1>
             </div>
-            <div className='w-128 space-y-4 shrink-0'>
+            <div className='py-1'>
+                {statusMessage && <p>{statusMessage}</p>}
+                {saveStatus === 'saving' && 'Saving changes...'}
+                {saveStatus === 'saved' && 'All changes saved.'}
+                {saveStatus === 'error' && 'Failed to save changes.'}
+            </div>
+            <div className='w-128 space-y-4 shrink-0 max-w-full'>
                 <Input
                     label='Display Name:'
                     id='display-name-input'
@@ -305,47 +361,51 @@ export default function ProfilePage() {
                     </tbody>
                 </table>
 
-                {/* <Input 
+                <Input 
                     label="Search courses:"
                     id="search-course-input"
                     value={courseSearch}
                     onChange={(e) => setCourseSearch(e.target.value)}
                     type="text"
                 />
-                searchedCourses.length === 0 ? (
+                {coursesLoading ? (
+                <p>Courses Loading...</p>
+                ) : coursesError ? null : searchedCourses.length === 0 ? (
                     <p className="text-sm text-slate-500">No courses match "{courseSearch}".</p>
                     ) : (
                         <>
                             <p className="text-slate-900 text-medium">Results found:</p>
-                                <div className="max-h-80 overflow-y-auto rounded-lg border-2 border-brand p-2">
-                                    <ul>
-                                        {searchedCourses.map((course) => (
-                                        <li key={course.id} className="px-2 py-2 hover:bg-slate-50">
-                                                <Checkbox 
-                                                    type="checkbox" 
-                                                    label={`${course.code} - ${course.title}`}
-                                                    checked={profileSettings.course_ids.includes(course.id)}
-                                                    onChange={() => update({
-                                                        course_ids: profileSettings.course_ids.includes(course.id)
-                                                            ? profileSettings.course_ids.filter(id => id !== course.id)
-                                                            : [...profileSettings.course_ids, course.id]
-                                                    })}
-                                                />
-                                        </li>
+                            <div className="max-h-80 overflow-y-auto rounded-lg border-2 border-brand p-2">
+                                <ul>
+                                    {searchedCourses.map((course) => (
+                                    <li key={course.id} className="px-2 py-2 hover:bg-slate-50">
+                                        <Checkbox 
+                                            type="checkbox" 
+                                            label={`${course.code} - ${course.title}`}
+                                            checked={profileSettings.course_ids.includes(course.id)}
+                                            onChange={() => update({
+                                                course_ids: profileSettings.course_ids.includes(course.id)
+                                                    ? profileSettings.course_ids.filter(id => id !== course.id)
+                                                    : [...profileSettings.course_ids, course.id]
+                                            })}
+                                        />
+                                    </li>
                                     ))}
                                 </ul>
                             </div>
                         </>
-                    )
+                    )}
                     {profileSettings.course_ids.length > 0 
                     ? <p className="text-slate-800">{profileSettings.course_ids.length} course(s) selected.</p> 
                     : <p className="text-slate-800">No courses selected.<span className="ml-1 text-red-600" aria-hidden="true">*</span>
-                </p>} */}
+                </p>}
+
+                <div className='w-1/3 space-y-4'>
+                <Button variant='primary' type='button' disabled={deleting} onClick={handleDelete} className={'hover:bg-red'}>
+                    {deleteConfim ? 'Are you sure?' : deleting ? 'Deleting...' : accountDeleted ? 'Account Deleted' : 'Delete Account'}
+                </Button>
             </div>
-            {statusMessage && <p>{statusMessage}</p>}
-            {saveStatus === 'saving' && 'Saving changes...'}
-            {saveStatus === 'saved' && 'All changes saved.'}
-            {saveStatus === 'error' && 'Failed to save changes.'}
+            </div>
         </section>
     )
 }

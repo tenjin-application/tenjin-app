@@ -1,15 +1,15 @@
 import { NavLink } from 'react-router-dom';
 
 const links = [
-    { label: "General", to: "general" },
+    // { label: "General", to: "general" },
     { label: "Profile", to: "profile" },
-    { label: "Notifications", to: "notifications" },
-    { label: "Accessibility", to: "accessibility" }
+    // { label: "Notifications", to: "notifications" },
+    // { label: "Accessibility", to: "accessibility" }
 ] as const;
 
 export default function SettingsNavbar() {
     return (
-            <header className="sticky top-0 w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white">
+            <header className="sticky top-0 w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white hidden md:block">
                   <div className="flex flex-col gap-4 px-6 py-4">
                     <nav className="flex flex-col gap-y-2 font-medium">
                       {links.map(({ label, to }) => (
